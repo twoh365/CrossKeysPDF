@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cross Keys – Invoice Builder (OCR + Manual) • Fixed</title>
+<style>
+  :root {
+    --beige:#f7f2e9;
+    --ink:#222;
+    --ink-muted:#555;
+    --gold:#e6b800;
+    --dark:#333;
+  }
+  html,body{margin:0;padding:0;background:var(--beige);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;}
+  header{padding:18px 20px;border-bottom:1px solid #ddd;background:var(--beige);position:sticky;top:0;z-index:2}
+  h1{margin:0;font-size:1.2rem;font-weight:700}
+  main{max-width:1100px;margin:24px auto;padding:0 16px 40px}
+  .grid{display:grid;gap:16px;grid-template-columns:1.1fr 1fr}
+  @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+  .card{background:#fff;border-radius:12px;border:1px solid #e7e2d8;box-shadow:0 1px 2px rgba(0,0,0,.04);padding:16px}
+  .card h2{margin:0 0 10px;font-size:1rem}
+  .hint{color:var(--ink-muted);font-size:.9rem}
+  .drop{display:flex;align-items:center;justify-content:center;min-height:120px;border:1.5px dashed #bfb8a8;border-radius:12px;background:#fff;cursor:pointer;text-align:center;padding:10px}
+  .drop.drag{background:#faf6ef}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  input[type="file"]{display:none}
+  label.btn,input.btn,button.btn{
+    border:1px solid #d8d1c4;background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:600
+  }
+  button.primary{background:var(--dark);color:#fff;border-color:var(--dark)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width: 700px){ .two{ grid-template-columns: 1fr; } }
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+  .field input,.field select,.field textarea{
+    border:1px solid #e0d8c9;border-radius:10px;padding:10px;background:#fff;font-size:0.95rem
+  }
+  .pill{display:inline-block;border-radius:999px;padding:4px 10px;background:#f0eadf;border:1px solid #e0d8c9;font-size:.8rem}
+  .log{white-space:pre-wrap;background:#fcfbf8;border:1px dashed #e0d8c9;padding:10px;border-radius:10px;max-height:180px;overflow:auto}
+  .preview{border:1px solid #e0d8c9;border-radius:10px;background:#fff;padding:10px}
+  .footer-note{font-size:.85rem;color:var(--ink-muted)}
+  .err{color:#8a1f1f}
+  .success{color:#0a6a2a}
+</style>
+</head>
+<body>
+<header>
+  <h1>Cross Keys – Invoice Builder (OCR + Manual) • Fixed</h1>
+</header>
+<main>
+  <div class="grid">
+    <!-- LEFT: OCR + Inputs -->
+    <section class="card">
+      <h2>1) Add Booking Screenshots</h2>
+      <div id="drop" class="drop">
+        <div>
+          <div><strong>Drag & drop</strong> screenshot(s) here (desktop)</div>
+          <div class="hint">or</div>
+          <div class="row" style="justify-content:center;margin-top:8px">
+            <label class="btn" for="images">Choose Images</label>
+            <input id="images" type="file" accept="image/*" multiple />
+          </div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label class="btn" for="logo">Upload Logo (PNG/JPG)</label>
+        <input id="logo" type="file" accept="image/png,image/jpeg" />
+        <span class="hint">Logo appears centered in the PDF.</span>
+      </div>
+      <p class="hint">If opening this file directly (file://), some browsers limit downloads. If PDF doesn’t download, serve via a tiny local server (see below).</p>
+
+      <h2 style="margin-top:18px">2) Extracted Text (OCR)</h2>
+      <div id="ocrLog" class="log">No OCR yet.</div>
+
+      <h2 style="margin-top:18px">3) Invoice Details (Review / Edit or Enter Manually)</h2>
+      <div class="two">
+        <div class="field"><label>Guest Name</label><input id="guestName" placeholder="e.g., Muhammad Ali Shabab" /></div>
+        <div class="field"><label>Adults</label><input id="adults" type="number" min="1" step="1" placeholder="1" /></div>
+        <div class="field"><label>Check-in (e.g., Tue 29 Jul 2025 17:00)</label><input id="checkIn" placeholder="Tue 29 Jul 2025 (17:00 - 18:00)" /></div>
+        <div class="field"><label>Check-out</label><input id="checkOut" placeholder="Thu 31 Jul 2025" /></div>
+        <div class="field"><label>Room Description</label><input id="room" placeholder="Double Room with Private Bathroom" /></div>
+        <div class="field"><label>Nights</label><input id="nights" type="number" min="1" step="1" placeholder="2" /></div>
+        <div class="field"><label>Rate (£) / night</label><input id="rate" type="number" min="0" step="0.01" placeholder="90" /></div>
+        <div class="field"><label>Payment Method / Status</label><input id="payMethod" placeholder="Paid Online" /></div>
+      </div>
+      <div class="row">
+        <span class="pill">VAT: 20%</span>
+        <span class="pill">Currency: GBP (£)</span>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button id="runOcr" class="btn">Re-run OCR on uploaded images</button>
+        <button id="clearForm" class="btn">Clear Form</button>
+      </div>
+    </section>
+
+    <!-- RIGHT: PDF Preview Controls -->
+    <section class="card">
+      <h2>4) Generate Styled PDF</h2>
+      <p class="hint">Matches your Cross Keys template: beige background, serif title with rule, centered logo.</p>
+      <div class="preview">
+        <div class="field">
+          <label>Hotel Header (fixed)</label>
+          <div class="hint">The Cross Keys Inn · 43 Lanark Road · Edinburgh EH14 1TL · Scotland</div>
+        </div>
+        <div class="row">
+          <button id="makePdf" class="btn primary">Generate PDF</button>
+          <button id="testFill" class="btn">Quick-fill sample</button>
+        </div>
+      </div>
+      <p class="footer-note" style="margin-top:12px">
+        If downloads don’t start on iOS Safari: after tapping <b>Generate PDF</b>, check the share sheet or “Downloads” list. <br/>
+        For desktop reliability, serve this file via a local server:<br/>
+        <code>python3 -m http.server 5500</code> → visit <code>http://localhost:5500/index.html</code>
+      </p>
+      <h2 style="margin-top:18px">Console</h2>
+      <div id="console" class="log" aria-live="polite">Ready.</div>
+    </section>
+  </div>
+</main>
+
+<!-- Libraries: Tesseract (OCR), jsPDF, AutoTable -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js" crossorigin="anonymous"></script>
+
+<script>
+const logEl = document.getElementById('console');
+const log = (msg, cls) => {
+  const p = document.createElement('div');
+  if (cls) p.className = cls;
+  p.textContent = msg;
+  logEl.appendChild(p);
+  logEl.scrollTop = logEl.scrollHeight;
+};
+
+const drop = document.getElementById('drop');
+const imagesInput = document.getElementById('images');
+const logoInput = document.getElementById('logo');
+const ocrLog = document.getElementById('ocrLog');
+
+let imageFiles = [];
+let logoDataURL = null;
+
+// Drag/drop (desktop)
+drop.addEventListener('dragover', (e)=>{ e.preventDefault(); drop.classList.add('drag'); });
+drop.addEventListener('dragleave', ()=> drop.classList.remove('drag'));
+drop.addEventListener('drop', async (e)=>{
+  e.preventDefault(); drop.classList.remove('drag');
+  try{
+    if (e.dataTransfer.files && e.dataTransfer.files.length) {
+      const imgs = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+      imageFiles.push(...imgs);
+      ocrLog.textContent = `${imageFiles.length} image(s) queued. Click “Re-run OCR” to process.`;
+      log(`Added ${imgs.length} image(s).`, 'success');
+    }
+  }catch(err){ log('Drop error: ' + err.message, 'err'); }
+});
+drop.addEventListener('click', ()=> imagesInput.click());
+
+// File inputs (mobile/desktop)
+imagesInput.addEventListener('change', ()=>{
+  try{
+    imageFiles.push(...imagesInput.files);
+    ocrLog.textContent = `${imageFiles.length} image(s) queued. Click “Re-run OCR” to process.`;
+    log(`Selected ${imagesInput.files.length} image(s).`, 'success');
+  }catch(err){ log('Image input error: ' + err.message, 'err'); }
+});
+
+logoInput.addEventListener('change', async ()=>{
+  try{
+    const f = logoInput.files?.[0];
+    if (!f) return;
+    logoDataURL = await fileToDataURL(f);
+    log('Logo loaded.', 'success');
+  }catch(err){ log('Logo error: ' + err.message, 'err'); }
+});
+
+document.getElementById('runOcr').addEventListener('click', async ()=>{
+  if (!imageFiles.length) { ocrLog.textContent = 'No images selected.'; return; }
+  ocrLog.textContent = 'Running OCR… (this happens in your browser)';
+  log('Starting OCR…');
+  const allText = [];
+  for (let i=0;i<imageFiles.length;i++){
+    try{
+      const t = await ocrImageWithPreprocess(imageFiles[i], (prog)=>{
+        ocrLog.textContent = `Processing ${i+1}/${imageFiles.length}… ${Math.round((prog||0)*100)}%`;
+      });
+      allText.push(t);
+      log(`OCR ${i+1}/${imageFiles.length} done.`, 'success');
+    }catch(err){
+      log('OCR error: ' + err.message, 'err');
+    }
+  }
+  const merged = allText.join('\n\n---\n\n');
+  ocrLog.textContent = merged || 'No text recognized.';
+  try{
+    tryParseIntoForm(merged);
+  }catch(err){ log('Parse error: ' + err.message, 'err'); }
+});
+
+document.getElementById('clearForm').addEventListener('click', ()=>{
+  ['guestName','adults','checkIn','checkOut','room','nights','rate','payMethod'].forEach(id=>document.getElementById(id).value='');
+  ocrLog.textContent = 'Form cleared.';
+  log('Form cleared.', 'success');
+});
+
+document.getElementById('testFill').addEventListener('click', ()=>{
+  document.getElementById('guestName').value = 'Muhammad Ali Shabab';
+  document.getElementById('adults').value = '1';
+  document.getElementById('checkIn').value = 'Tue 29 Jul 2025 (17:00 - 18:00)';
+  document.getElementById('checkOut').value = 'Thu 31 Jul 2025';
+  document.getElementById('room').value = 'Double Room with Private Bathroom';
+  document.getElementById('nights').value = '2';
+  document.getElementById('rate').value = '90';
+  document.getElementById('payMethod').value = 'Paid Online';
+  log('Sample values filled.', 'success');
+});
+
+document.getElementById('makePdf').addEventListener('click', async ()=>{
+  try{
+    await makePdf();
+    log('PDF generated (check your downloads).', 'success');
+  }catch(err){
+    log('PDF error: ' + err.message, 'err');
+  }
+});
+
+// ---------- Helpers ----------
+async function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+// Preprocess image via canvas (grayscale + contrast) to help OCR
+async function ocrImageWithPreprocess(file, onProgress){
+  const dataURL = await fileToDataURL(file);
+  const img = await loadImage(dataURL);
+  const processed = preprocess(img);
+  // Explicit worker paths from CDN to avoid path resolution issues
+  const worker = await Tesseract.createWorker({
+    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
+    langPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/lang/',
+    corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js',
+    logger: m => {
+      if (m.status === 'recognizing text' && onProgress) onProgress(m.progress);
+    }
+  });
+  await worker.loadLanguage('eng');
+  await worker.initialize('eng');
+  const { data: { text } } = await worker.recognize(processed);
+  await worker.terminate();
+  return text;
+}
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = ()=> resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+function preprocess(img){
+  const cnv = document.createElement('canvas');
+  cnv.width = img.width; cnv.height = img.height;
+  const ctx = cnv.getContext('2d');
+  ctx.drawImage(img,0,0);
+  const imgData = ctx.getImageData(0,0,cnv.width,cnv.height);
+  const d = imgData.data;
+  const contrast = 1.15; // 15%
+  const intercept = 128*(1-contrast);
+  for (let i=0;i<d.length;i+=4){
+    const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+    let v = g*contrast + intercept;
+    v = Math.max(0, Math.min(255, v));
+    d[i]=d[i+1]=d[i+2]=v;
+  }
+  ctx.putImageData(imgData,0,0);
+  return cnv.toDataURL('image/png');
+}
+
+// Try to parse common fields from OCR text
+function tryParseIntoForm(text){
+  const set = (id,val)=>{ if(val && !document.getElementById(id).value) document.getElementById(id).value = val.trim(); };
+  let m;
+  m = text.match(/Guest(?:\s*Name)?\s*[:\-]\s*([^\n,]+)(?:,|$)/i) || text.match(/Name\s*[:\-]\s*([^\n,]+)(?:,|$)/i);
+  set('guestName', m?.[1]);
+  m = text.match(/Adults?\s*[:\-]?\s*(\d+)/i); set('adults', m?.[1]);
+  m = text.match(/Check[\s\-]?in\s*[:\-]?\s*([^\n]+)/i); set('checkIn', m?.[1]);
+  m = text.match(/Check[\s\-]?out\s*[:\-]?\s*([^\n]+)|Departure\s*[:\-]?\s*([^\n]+)/i); set('checkOut', (m?.[1]||m?.[2]));
+  m = text.match(/Room\s*(Type|Category)?\s*[:\-]?\s*([^\n]+)/i); set('room', m?.[2]);
+  m = text.match(/Nights?\s*[:\-]?\s*(\d+)/i); set('nights', m?.[1]);
+  m = text.match(/Rate\s*(?:per\s*night)?\s*[:\-]?\s*£?\s*([\d]+(?:\.\d{1,2})?)/i) || text.match(/£\s*([\d]+(?:\.\d{1,2})?)[\/]?(?:night)?/i);
+  set('rate', m?.[1]);
+  m = text.match(/Payment\s*Method\s*[:\-]?\s*([^\n]+)|Paid\s*Online/i);
+  set('payMethod', m?.[1] ? m[1] : (text.match(/Paid\s*Online/i)? 'Paid Online' : ''));
+}
+
+// Create PDF in style of your template
+async function makePdf(){
+  if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('jsPDF failed to load.');
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' }); // 595 x 842
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+
+  // Beige background
+  doc.setFillColor(0xF7,0xF2,0xE9);
+  doc.rect(0,0,W,H,'F');
+
+  // Margins
+  const LM = 40, TM = 60;
+  let y = TM;
+
+  // Logo centered
+  if (logoDataURL){
+    try{
+      const LOGO_W = 120, LOGO_H = 120;
+      doc.addImage(logoDataURL, 'PNG', (W-LOGO_W)/2, y, LOGO_W, LOGO_H);
+    }catch(e){
+      log('Logo addImage error (continuing without logo): ' + e.message, 'err');
+    }
+  } else {
+    // fallback text
+    doc.setFont('Times','Bold'); doc.setFontSize(16);
+    doc.text('The Cross Keys Inn', W/2, y+20, {align:'center'});
+  }
+  y += 140;
+
+  // Title in serif with rule
+  doc.setFont('Times','Bold'); doc.setFontSize(22);
+  doc.setTextColor(0,0,0);
+  const title = "Invoice for Guest’s Stay at The Cross Keys Inn";
+  doc.text(title, W/2, y, {align:'center'});
+  y += 10;
+  doc.setDrawColor(0,0,0);
+  doc.setLineWidth(1);
+  doc.line(LM, y, W-LM, y);
+  y += 16;
+
+  // Hotel header
+  doc.setFont('Times','Normal'); doc.setFontSize(11);
+  doc.text("The Cross Keys Inn", LM, y); y += 14;
+  doc.text("43 Lanark Road", LM, y); y += 14;
+  doc.text("Edinburgh EH14 1TL", LM, y); y += 14;
+  doc.text("Scotland", LM, y); y += 22;
+
+  // Guest details
+  doc.setFont('Helvetica','Bold'); doc.setFontSize(12);
+  doc.text("Guest Details", LM, y); y += 14;
+  doc.setFont('Helvetica','Normal'); doc.setFontSize(11);
+  const get = id => (document.getElementById(id).value || '').trim();
+  const guest = get('guestName');
+  const checkIn = get('checkIn');
+  const checkOut = get('checkOut');
+  const room = get('room');
+  const adults = get('adults') || '';
+  doc.text(`Guest: ${guest}`, LM, y); y += 14;
+  doc.text(`Check-in: ${checkIn}`, LM, y); y += 14;
+  doc.text(`Check-out: ${checkOut}`, LM, y); y += 14;
+  doc.text(`Room: ${room}`, LM, y); y += 14;
+  doc.text(`Adults: ${adults}`, LM, y); y += 18;
+
+  // Charges table (compute)
+  const nights = parseFloat(get('nights')||'0') || 0;
+  const rate = parseFloat(get('rate')||'0') || 0;
+  const subtotal = +(nights * rate).toFixed(2);
+  const vat = +(subtotal * 0.20).toFixed(2);
+  const total = +(subtotal + vat).toFixed(2);
+
+  const head = [['Description','Nights','Rate (£)','Amount (£)']];
+  const body = [
+    [room || '—', nights ? String(nights) : '—', rate? `£${rate.toFixed(2)}` : '—', subtotal? `£${subtotal.toFixed(2)}` : '—'],
+    ['','','Subtotal', subtotal? `£${subtotal.toFixed(2)}` : '—'],
+    ['','','VAT (20%)', subtotal? `£${vat.toFixed(2)}` : '—'],
+    ['','','Total', subtotal? `£${total.toFixed(2)}` : '—'],
+  ];
+
+  if (!doc.autoTable) throw new Error('jsPDF-AutoTable failed to load.');
+  doc.autoTable({
+    startY: y,
+    margin: { left: LM, right: LM },
+    head, body,
+    styles: { font: 'helvetica', fontSize: 11, halign:'center' },
+    headStyles: { fillColor:[51,51,51], textColor:255, fontStyle:'bold' },
+    columnStyles: {
+      0: { halign:'left', cellWidth: 260 },
+      1: { cellWidth: 70 },
+      2: { cellWidth: 90 },
+      3: { cellWidth: 90 },
+    },
+    willDrawCell: function(data){
+      const isTotalRow = data.row.index === (body.length-1);
+      if (isTotalRow && data.column.index >= 2){
+        data.cell.styles.fillColor = [230,184,0];
+        data.cell.styles.textColor = [0,0,0];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    },
+    theme:'grid',
+    tableWidth: W - LM*2
+  });
+
+  let afterTableY = doc.lastAutoTable.finalY + 20;
+
+  // Payment info
+  doc.setFont('Helvetica','Bold'); doc.setFontSize(12);
+  doc.text("Payment Information", LM, afterTableY); afterTableY += 14;
+  doc.setFont('Helvetica','Normal'); doc.setFontSize(11);
+  const payMethod = get('payMethod') || '';
+  if (payMethod) doc.text(`Payment Method: ${payMethod}`, LM, afterTableY);
+  afterTableY += 14;
+  if (/paid\s*online/i.test(payMethod)) {
+    doc.text(`Status: Paid Online`, LM, afterTableY); afterTableY += 14;
+  }
+
+  // Save (some browsers block automatic download for file://; user should still get a save dialog)
+  const safeGuest = guest ? guest.replace(/[^\w\d\- ]+/g,'').slice(0,60) : 'Guest';
+  try{
+    doc.save(`CrossKeys_Invoice_${safeGuest}.pdf`);
+  }catch(e){
+    // Fallback: open as blob
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CrossKeys_Invoice_${safeGuest}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+}
+</script>
+</body>
+</html>
