@@ -1,0 +1,14 @@
+{
+    "name": "crosskeys-pdf-emailer",
+    "version": "1.0.0",
+    "description": "Netlify function for sending PDF invoices",
+    "main": "index.js",
+    "dependencies": {
+        "nodemailer": "^6.9.7"
+    },
+    "scripts": {
+        "build": "echo 'No build required'"
+    },
+    "author": "",
+    "license": "MIT"
+}
