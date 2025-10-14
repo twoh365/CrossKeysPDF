@@ -57,7 +57,7 @@
 
         .options-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2em;
             margin: 2em 0;
         }
@@ -82,10 +82,9 @@
         }
 
         .logo-container {
-            width: 120px;
+            width: 200px;
             height: 120px;
             margin: 0 auto 1.5em auto;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -98,39 +97,13 @@
             overflow: hidden;
         }
 
-        .crosskeys-logo {
-            background: linear-gradient(135deg, #1a1a1a, #333333);
-        }
-
-        .crosskeys-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border-radius: 50%;
-            padding: 10px;
-        }
-
-        .armadillo-logo {
-            background: linear-gradient(135deg, #2E7D32, #66BB6A);
-        }
-
-        .armadillo-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-
-        .onthewalk-logo {
-            background: linear-gradient(135deg, #4A148C, #7B1FA2);
-        }
-
+        .crosskeys-logo img,
+        .armadillo-logo img,
         .onthewalk-logo img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            border-radius: 50%;
-            padding: 10px;
+            mix-blend-mode: multiply;
         }
 
         .property-name {
@@ -187,6 +160,14 @@
             font-size: 0.9em;
         }
 
+        @media (min-width: 1200px) {
+            .options-grid {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 1200px;
+                margin: 2em auto;
+            }
+        }
+
         @media (max-width: 768px) {
             .options-grid {
                 grid-template-columns: 1fr;
@@ -220,7 +201,8 @@
             <!-- Crosskeys Option -->
             <a href="crosskeys.html" class="option-card">
                 <div class="logo-container crosskeys-logo">
-                    <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/crosskeys-logo.png" alt="Crosskeys Logo">
+                    <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/crosskeys-logo.png"
+                        alt="Crosskeys Logo">
                 </div>
                 <div class="property-name">Crosskeys</div>
                 <div class="property-description">
@@ -251,7 +233,8 @@
             <!-- Armadillo Guest House Option -->
             <a href="armadillo.html" class="option-card">
                 <div class="logo-container armadillo-logo">
-                    <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/armadillo-logo.png" alt="Armadillo Guest House Logo">
+                    <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/armadillo-logo.png"
+                        alt="Armadillo Guest House Logo">
                 </div>
                 <div class="property-name">Armadillo Guest House</div>
                 <div class="property-description">
@@ -282,7 +265,8 @@
             <!-- On The Walk Option -->
             <a href="onthewalk.html" class="option-card">
                 <div class="logo-container onthewalk-logo">
-                    <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/onthewalk-logo.png" alt="On The Walk Logo">
+                    <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/onthewalk-logo.png"
+                        alt="On The Walk Logo">
                 </div>
                 <div class="property-name">On The Walk</div>
                 <div class="property-description">
@@ -314,7 +298,8 @@
         <div class="footer">
             <p><strong>Invoice Generation Features:</strong></p>
             <p>
-                Both systems support flexible rate modes (flat rate per night or total for stay, plus custom nightly
+                All three systems support flexible rate modes (flat rate per night or total for stay, plus custom
+                nightly
                 rates),
                 VAT options (off, excluded, or included), multiple payment methods, and export to professional A4 PDF
                 format
