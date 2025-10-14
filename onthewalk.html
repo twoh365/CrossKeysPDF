@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>On The Walk -- Invoice Maker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --cream: #f5f0e9;
+            --ink: #222;
+            --line: #c8c3bb;
+            --ink-muted: #555;
+            --panel: #fffdfa;
+            --watermark: #1a1a1a;
+            /* base ink for watermark; we'll fade it heavily */
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background: var(--cream);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #app {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 16px;
+            margin: 0 0 16px 0;
+        }
+
+        .controls label {
+            display: block;
+            margin: 8px 0 4px;
+            font-weight: 600
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            font: inherit;
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border: 1px solid var(--line);
+            background: #fff;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700
+        }
+
+        .btn.primary {
+            background: var(--cream)
+        }
+
+        .btn.danger {
+            background: #fff3f3
+        }
+
+        .muted {
+            color: var(--ink-muted);
+            font-size: .9em
+        }
+
+        /* A4 canvas */
+        #invoice {
+            width: 210mm;
+            min-height: 297mm;
+            background: var(--cream);
+            color: var(--ink);
+            padding: 18mm 16mm;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact
+        }
+
+        /* Watermark */
+        #invoice::before {
+            content: "OTW";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 140px;
+            font-weight: 900;
+            color: var(--watermark);
+            opacity: .03;
+            z-index: 1;
+            pointer-events: none
+        }
+
+        #invoice>* {
+            position: relative;
+            z-index: 2
+        }
+
+        .logo {
+            height: 40mm;
+            width: auto;
+            object-fit: contain
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8mm
+        }
+
+        .brandline {
+            text-align: right;
+            margin-right: 0
+        }
+
+        .prop {
+            font-family: "Times New Roman", Times, "Liberation Serif", serif;
+            font-size: 11pt;
+            line-height: 1.3;
+            color: var(--ink);
+            margin: 1px 0
+        }
+
+        .prop strong {
+            font-weight: 700
+        }
+
+        h1 {
+            font-family: "Times New Roman", Times, "Liberation Serif", serif;
+            font-size: 24pt;
+            font-weight: 700;
+            margin: 0 0 4mm;
+            text-align: center;
+            color: var(--ink)
+        }
+
+        h2 {
+            font-family: "Times New Roman", Times, "Liberation Serif", serif;
+            font-size: 16pt;
+            font-weight: 700;
+            margin: 6mm 0 4mm;
+            text-align: center;
+            color: var(--ink)
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--line);
+            margin: 4mm 0
+        }
+
+        .invoice-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8mm;
+            margin-bottom: 6mm
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 6mm 0;
+            font-size: 11pt
+        }
+
+        th {
+            background: var(--cream);
+            padding: 3mm 2mm;
+            text-align: left;
+            font-weight: 700;
+            border-bottom: 1px solid var(--line)
+        }
+
+        td {
+            padding: 2mm;
+            border-bottom: 1px solid var(--line)
+        }
+
+        .currency {
+            text-align: right;
+            font-variant-numeric: tabular-nums
+        }
+
+        .total-row {
+            font-weight: 700;
+            border-top: 2px solid var(--ink)
+        }
+
+        .subtotal-row {
+            border-top: 1px solid var(--ink)
+        }
+
+        .footer {
+            font-size: 9pt;
+            text-align: center;
+            margin-top: 8mm;
+            color: var(--ink-muted);
+            font-style: italic
+        }
+
+        .small {
+            font-size: 9pt
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                background: white
+            }
+
+            #app {
+                display: none
+            }
+
+            #invoice {
+                margin: 0;
+                box-shadow: none;
+                page-break-inside: avoid
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="card">
+            <h1>On The Walk Invoice Generator</h1>
+            <p class="muted">Generate professional PDF invoices for On The Walk guests.</p>
+        </div>
+
+        <div class="card controls">
+            <div class="row">
+                <div>
+                    <label>Guest Name</label>
+                    <input type="text" id="guestName" placeholder="John Smith" />
+                </div>
+                <div>
+                    <label>Guest Email (for emailing invoice)</label>
+                    <input type="email" id="guestEmail" placeholder="guest@example.com" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label>Room Type</label>
+                    <input type="text" id="roomType" placeholder="Standard Double Room" />
+                </div>
+                <div>
+                    <label>Invoice Date</label>
+                    <input type="date" id="invoiceDate" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label>Check-In Date</label>
+                    <input type="date" id="checkInDate" />
+                </div>
+                <div>
+                    <label>Check-Out Date</label>
+                    <input type="date" id="checkOutDate" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label>Payment Method</label>
+                    <select id="paymentMethod">
+                        <option value="Paid by Card Via Booking.com.">Paid by Card Via Booking.com.</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label>VAT Option</label>
+                    <select id="vatOption">
+                        <option value="excluded">VAT Excluded (+ 20% VAT)</option>
+                        <option value="included">VAT Included (no additional VAT)</option>
+                        <option value="none">No VAT</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label>VAT Number (optional)</label>
+                    <input type="text" id="vatNumber" placeholder="458030991" />
+                </div>
+                <div>
+                    <label>Footer Text (optional)</label>
+                    <input type="text" id="footer" placeholder="Thank you for staying with us!" />
+                </div>
+            </div>
+
+            <div>
+                <label>Payment Notes (optional)</label>
+                <textarea id="paymentNotes" rows="2" placeholder="Additional payment information or notes"></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Pricing</h2>
+
+            <div class="row">
+                <div>
+                    <label>
+                        <input type="radio" name="priceMode" value="flat" checked> Flat Rate
+                    </label>
+                    <p class="muted">Set one rate for the entire stay</p>
+                </div>
+                <div>
+                    <label>
+                        <input type="radio" name="priceMode" value="custom"> Custom Nightly Rates
+                    </label>
+                    <p class="muted">Set different rates per night</p>
+                </div>
+            </div>
+
+            <div id="flatRateSection">
+                <div class="row">
+                    <div>
+                        <label>Amount (£)</label>
+                        <input type="number" id="flatRate" step="0.01" placeholder="120.00" />
+                    </div>
+                    <div>
+                        <label>Input Mode</label>
+                        <select id="flatInputMode">
+                            <option value="rate">Rate per night</option>
+                            <option value="total">Total for stay</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="customRatesSection" style="display:none;">
+                <p class="muted">Individual rates will appear after selecting check-in/out dates.</p>
+                <div id="nightlyRates"></div>
+            </div>
+
+            <div class="row">
+                <button class="btn primary" onclick="compute()">Preview on Page</button>
+                <button class="btn" onclick="generateInvoice()">Download PDF</button>
+            </div>
+
+            <div class="row">
+                <button class="btn" onclick="emailInvoice()">Email Invoice</button>
+                <button class="btn danger" onclick="clearForm()">Clear Form</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF -->
+    <div id="invoice" role="document" aria-label="Invoice preview" style="display:none;">
+        <div class="header">
+            <img class="logo"
+                src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/onthewalk-logo.png"
+                alt="On The Walk Logo">
+            <div class="brandline">
+                <div class="prop" style="font-variant:small-caps;"><strong>On The Walk</strong></div>
+                <div class="prop">18 Albert Pl, Edinburgh EH7 5HN, Scotland</div>
+            </div>
+        </div>
+
+        <h2 style="text-align: center;">Invoice for Your Stay at On The Walk</h2>
+        <div class="divider"></div>
+
+        <div class="invoice-details">
+            <div>
+                <div class="prop">Guest Name:</div>
+                <div style="font-weight:700; margin-bottom:4mm;" id="outGuestName"></div>
+                <div class="prop" style="margin-top:6px;">Room Type:</div>
+                <div style="font-weight:700;" id="outRoomType"></div>
+            </div>
+            <div style="text-align:right;">
+                <div><span class="prop">Invoice Date:</span> <span id="outInvoiceDate"></span></div>
+                <div><span class="prop">Check-In Date:</span> <span id="outCheckIn"></span></div>
+                <div><span class="prop">Check-Out Date:</span> <span id="outCheckOut"></span></div>
+                <div><span class="prop">Nights:</span> <span id="outNights"></span></div>
+            </div>
+        </div>
+
+        <table id="invoiceTable">
+            <thead>
+                <tr>
+                    <th style="width:50%">Description</th>
+                    <th style="width:25%">Date</th>
+                    <th style="width:25%" class="currency">Amount</th>
+                </tr>
+            </thead>
+            <tbody id="invoiceRows"></tbody>
+            <tbody>
+                <tr class="subtotal-row">
+                    <td><strong>Subtotal</strong></td>
+                    <td></td>
+                    <td class="currency"><strong id="outSubtotal"></strong></td>
+                </tr>
+                <tr id="vatRow" style="display:none;">
+                    <td>VAT (20%)</td>
+                    <td></td>
+                    <td class="currency" id="outVAT"></td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>Total</strong></td>
+                    <td></td>
+                    <td class="currency"><strong id="outTotal"></strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div id="vatNote" class="small" style="display:none;">
+            <em>VAT is included in the above prices.</em>
+        </div>
+
+        <div style="margin-top:6mm;" class="small">
+            <span class="prop">Payment Method:</span> <span id="outPaymentMethod"></span>
+        </div>
+
+        <div style="margin-top:2mm;" class="small" id="outPaymentNotesWrapper" hidden>
+            <span class="prop">Notes:</span> <span id="outPaymentNotes"></span>
+        </div>
+
+        <div class="footer" id="outFooter"></div>
+
+        <div id="outVATNumber" class="small" style="display:none; margin-top:8mm; text-align:center; color: #666;">
+        </div>
+    </div>
+
+    <script>
+        /* Currency (GBP) */
+        const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        function fmtGBP(amount) {
+            return gbp.format(amount);
+        }
+
+        /* Date formatting */
+        function formatDatePretty(isoDate) {
+            const date = new Date(isoDate + 'T00:00:00');
+            const day = date.getDate();
+            const month = date.toLocaleDateString('en-GB', { month: 'long' });
+            const year = date.getFullYear();
+
+            const ordinal = day % 10 === 1 && day !== 11 ? 'st' :
+                day % 10 === 2 && day !== 12 ? 'nd' :
+                    day % 10 === 3 && day !== 13 ? 'rd' : 'th';
+
+            return `${day}${ordinal} of ${month} ${year}`;
+        }
+
+        /* Generate list of nights between check-in and check-out */
+        function listNights(checkIn, checkOut) {
+            const nights = [];
+            const current = new Date(checkIn + 'T00:00:00');
+            const end = new Date(checkOut + 'T00:00:00');
+
+            while (current < end) {
+                nights.push(current.toISOString().split('T')[0]);
+                current.setDate(current.getDate() + 1);
+            }
+            return nights;
+        }
+
+        /* Split amount evenly across nights, handling penny rounding */
+        function splitEvenly(total, numNights) {
+            const baseAmount = Math.floor((total * 100) / numNights) / 100;
+            const remainder = Math.round((total * 100) - (baseAmount * 100 * numNights));
+            const amounts = Array(numNights).fill(baseAmount);
+
+            for (let i = 0; i < remainder; i++) {
+                amounts[i] += 0.01;
+            }
+            return amounts;
+        }
+
+        /* Main compute function */
+        function compute() {
+            const guestName = document.getElementById('guestName').value.trim();
+            const roomType = document.getElementById('roomType').value.trim();
+            const invoiceDate = document.getElementById('invoiceDate').value;
+            const checkInDate = document.getElementById('checkInDate').value;
+            const checkOutDate = document.getElementById('checkOutDate').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const vatOption = document.getElementById('vatOption').value;
+            const vatNumber = document.getElementById('vatNumber').value.trim();
+            const footer = document.getElementById('footer').value.trim();
+            const paymentNotes = document.getElementById('paymentNotes').value.trim();
+
+            if (!guestName || !checkInDate || !checkOutDate) {
+                alert('Please fill in guest name, check-in date, and check-out date.');
+                return;
+            }
+
+            const nights = listNights(checkInDate, checkOutDate);
+            if (nights.length === 0) {
+                alert('Check-out date must be after check-in date.');
+                return;
+            }
+
+            // Calculate amounts based on pricing mode
+            let amounts = [];
+            const priceMode = document.querySelector('input[name="priceMode"]:checked').value;
+
+            if (priceMode === 'flat') {
+                const flatRate = parseFloat(document.getElementById('flatRate').value || "0");
+                const flatInputMode = document.getElementById('flatInputMode').value;
+
+                if (flatInputMode === 'rate') {
+                    amounts = Array(nights.length).fill(flatRate);
+                } else {
+                    amounts = splitEvenly(flatRate, nights.length);
+                }
+            } else {
+                const rows = document.querySelectorAll('#nightlyRates tr');
+                rows.forEach(tr => {
+                    const rate = parseFloat(tr.querySelector('.night-rate').value || "0");
+                    amounts.push(rate);
+                });
+            }
+
+            // Calculate totals
+            const subtotal = amounts.reduce((sum, amt) => sum + amt, 0);
+            let vat = 0;
+            let total = subtotal;
+
+            if (vatOption === 'excluded') {
+                vat = subtotal * 0.20;
+                total = subtotal + vat;
+                document.getElementById('vatRow').style.display = 'table-row';
+                document.getElementById('vatNote').style.display = 'none';
+            } else if (vatOption === 'included') {
+                document.getElementById('vatRow').style.display = 'none';
+                document.getElementById('vatNote').style.display = 'block';
+            } else {
+                document.getElementById('vatRow').style.display = 'none';
+                document.getElementById('vatNote').style.display = 'none';
+            }
+
+            // Populate invoice
+            document.getElementById('outGuestName').innerText = guestName;
+            document.getElementById('outRoomType').innerText = roomType || 'Room';
+            document.getElementById('outInvoiceDate').innerText = formatDatePretty(invoiceDate);
+            document.getElementById('outCheckIn').innerText = formatDatePretty(checkInDate);
+            document.getElementById('outCheckOut').innerText = formatDatePretty(checkOutDate);
+            document.getElementById('outNights').innerText = nights.length;
+            document.getElementById('outPaymentMethod').innerText = paymentMethod;
+
+            // Build invoice rows
+            const tableBody = document.getElementById('invoiceRows');
+            tableBody.innerHTML = '';
+
+            nights.forEach((night, i) => {
+                const row = tableBody.insertRow();
+                const desc = roomType || 'Room';
+                row.innerHTML = `
+          <td>${desc}</td>
+          <td>${formatDatePretty(night)}</td>
+          <td class="currency">${fmtGBP(amounts[i])}</td>
+        `;
+            });
+
+            document.getElementById('outSubtotal').innerText = fmtGBP(subtotal);
+            document.getElementById('outVAT').innerText = fmtGBP(vat);
+            document.getElementById('outTotal').innerText = fmtGBP(total);
+
+            // Payment notes
+            if (paymentNotes) {
+                document.getElementById('outPaymentNotes').innerText = paymentNotes;
+                document.getElementById('outPaymentNotesWrapper').hidden = false;
+            } else {
+                document.getElementById('outPaymentNotesWrapper').hidden = true;
+            }
+
+            document.getElementById('outFooter').innerText = footer;
+
+            // VAT Number display with company details
+            const vatNumberEl = document.getElementById('outVATNumber');
+            if (vatNumber) {
+                vatNumberEl.innerHTML = `We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. ${vatNumber}`;
+                vatNumberEl.style.display = 'block';
+            } else {
+                vatNumberEl.style.display = 'none';
+            }
+
+            document.getElementById('invoice').style.display = 'block';
+        }
+
+        /* Generate and download PDF */
+        async function generateInvoice() {
+            compute();
+            const el = document.getElementById('invoice');
+            el.style.display = 'block';
+
+            const opt = {
+                margin: 0,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().from(el).set(opt).save('OnTheWalk-Invoice.pdf');
+            } catch (error) {
+                console.error('PDF generation failed:', error);
+                try {
+                    const blob = await html2pdf().from(el).set(opt).outputPdf('blob');
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'OnTheWalk-Invoice.pdf';
+                    a.click();
+                } catch (fallbackError) {
+                    alert('Failed to generate PDF. Please try again.');
+                }
+            }
+        }
+
+        /* Initialize form */
+        function init() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('invoiceDate').value = today;
+            document.getElementById('vatNumber').value = '458030991';
+
+            // Price mode switching
+            document.querySelectorAll('input[name="priceMode"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (this.value === 'flat') {
+                        document.getElementById('flatRateSection').style.display = 'block';
+                        document.getElementById('customRatesSection').style.display = 'none';
+                    } else {
+                        document.getElementById('flatRateSection').style.display = 'none';
+                        document.getElementById('customRatesSection').style.display = 'block';
+                        updateNightlyRates();
+                    }
+                });
+            });
+
+            // Update nightly rates when dates change
+            document.getElementById('checkInDate').addEventListener('change', updateNightlyRates);
+            document.getElementById('checkOutDate').addEventListener('change', updateNightlyRates);
+        }
+
+        /* Update nightly rates table */
+        function updateNightlyRates() {
+            const checkIn = document.getElementById('checkInDate').value;
+            const checkOut = document.getElementById('checkOutDate').value;
+
+            if (!checkIn || !checkOut) return;
+
+            const nights = listNights(checkIn, checkOut);
+            const container = document.getElementById('nightlyRates');
+
+            if (nights.length === 0) {
+                container.innerHTML = '<p class="muted">Please select valid check-in and check-out dates.</p>';
+                return;
+            }
+
+            let html = '<table style="width:100%;"><thead><tr><th>Date</th><th>Rate (£)</th></tr></thead><tbody>';
+
+            nights.forEach(night => {
+                html += `<tr><td>${formatDatePretty(night)}</td><td><input type="number" class="night-rate" step="0.01" placeholder="120.00" style="width:100%;"></td></tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        /* Clear form */
+        function clearForm() {
+            if (confirm('Clear all form data?')) {
+                document.querySelectorAll('input, select, textarea').forEach(el => {
+                    if (el.type === 'radio') {
+                        el.checked = el.value === 'flat';
+                    } else {
+                        el.value = '';
+                    }
+                });
+                init();
+                document.getElementById('invoice').style.display = 'none';
+            }
+        }
+
+        // Netlify Function Configuration
+        // This will work automatically when deployed to Netlify
+        const NETLIFY_FUNCTION_URL = '/.netlify/functions/send-invoice';
+
+        // Email Invoice Function using Netlify Function + Nodemailer
+        async function emailInvoice() {
+            const guestEmail = document.getElementById('guestEmail').value.trim();
+            const guestName = document.getElementById('guestName').value.trim();
+
+            if (!guestEmail) {
+                alert('Please enter the guest email address.');
+                return;
+            }
+
+            if (!guestName) {
+                alert('Please enter the guest name.');
+                return;
+            }
+
+            try {
+                // Show loading state
+                const emailBtn = event.target;
+                const originalText = emailBtn.innerText;
+                emailBtn.innerText = 'Sending...';
+                emailBtn.disabled = true;
+
+                // Generate PDF as blob
+                compute();
+                const el = document.getElementById('invoice');
+                el.style.display = 'block';
+
+                const opt = {
+                    margin: 0,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                // Generate PDF blob and convert to base64
+                const pdfBlob = await html2pdf().from(el).set(opt).outputPdf('blob');
+
+                // Convert blob to base64
+                const base64Data = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.readAsDataURL(pdfBlob);
+                });
+
+                // Send to Netlify Function
+                const response = await fetch(NETLIFY_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        guestEmail: guestEmail,
+                        guestName: guestName,
+                        propertyName: 'On The Walk',
+                        pdfBase64: base64Data,
+                        fileName: 'OnTheWalk-Invoice.pdf'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert(`Invoice successfully sent to ${guestEmail}!`);
+                } else {
+                    throw new Error(result.error || result.details || 'Failed to send email');
+                }
+
+            } catch (error) {
+                console.error('Email sending failed:', error);
+                alert('Failed to send email. Please try again or download the PDF instead.');
+            } finally {
+                // Reset button state
+                const emailBtn = document.querySelector('button[onclick="emailInvoice()"]');
+                if (emailBtn) {
+                    emailBtn.innerText = originalText;
+                    emailBtn.disabled = false;
+                }
+            }
+        }
+
+        /* Initialize on page load */
+        init();
+    </script>
+</body>
+
+</html>
