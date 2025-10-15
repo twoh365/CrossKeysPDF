@@ -884,7 +884,13 @@
             const t = new Date();
             const yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0');
             const iso = `${yyyy}-${mm}-${dd}`;
-            const inv = document.getElementById('invoiceDate'); if (inv && !inv.value) inv.value = iso;
+            // Set all date fields to today if empty
+            const inv = document.getElementById('invoiceDate');
+            if (inv && !inv.value) inv.value = iso;
+            const checkIn = document.getElementById('checkIn');
+            if (checkIn && !checkIn.value) checkIn.value = iso;
+            const checkOut = document.getElementById('checkOut');
+            if (checkOut && !checkOut.value) checkOut.value = iso;
 
             // Force defaults (in case browser ignores selected)
             document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
