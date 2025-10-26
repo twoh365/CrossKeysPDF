@@ -337,10 +337,7 @@
                     <label>Guest Name</label>
                     <input type="text" id="guestName" placeholder="Guest full name" />
                 </div>
-                <div>
-                    <label>Guest Email</label>
-                    <input type="email" id="guestEmail" placeholder="guest@example.com" />
-                </div>
+                <div></div>
             </div>
 
             <div class="row">
@@ -472,7 +469,6 @@
 
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn primary" type="button" onclick="generateInvoice()">Download PDF</button>
-                <button class="btn primary" type="button" onclick="emailInvoice()">Email Invoice</button>
                 <button class="btn" type="button" onclick="previewInvoice()">Preview on Page</button>
             </div>
         </div>
@@ -594,8 +590,9 @@
         }
         function formatDateUK(iso) {
             if (!iso) return "";
-            const d = new Date(iso + "T00:00:00");
-            return d.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            // Parse as local date, not UTC
+            const [yyyy, mm, dd] = iso.split('-');
+            return `${dd}/${mm}/${yyyy}`;
         }
         function listNights(startISO, endISO) {
             const out = []; if (!startISO || !endISO) return out;
@@ -735,10 +732,10 @@
                     subtotal += amt;
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-            <td>Accommodation</td>
-            <td>${formatDatePretty(iso)}</td>
-            <td class="right amount">${fmtGBP(amt)}</td>
-          `;
+                        <td>Accommodation</td>
+                        <td>${formatDateUK(iso)}</td>
+                        <td class="right amount">${fmtGBP(amt)}</td>
+                    `;
                     tbody.appendChild(tr);
                 });
                 let vat = 0, total = subtotal;
@@ -757,7 +754,7 @@
                     const r = parseFloat(tr.querySelector('.night-rate').value || "0");
                     subtotal += r;
                     const row = document.createElement('tr');
-                    row.innerHTML = `<td>Accommodation</td><td>${formatDatePretty(d)}</td><td class="right amount">${fmtGBP(r)}</td>`;
+                    row.innerHTML = `<td>Accommodation</td><td>${formatDateUK(d)}</td><td class="right amount">${fmtGBP(r)}</td>`;
                     outBody.appendChild(row);
                 });
                 let vat = 0, total = subtotal;
@@ -802,89 +799,7 @@
         }
 
 
-        // Netlify Function Configuration
-        // This will work automatically when deployed to Netlify
-        const NETLIFY_FUNCTION_URL = '/.netlify/functions/send-invoice';
-
-        // Email Invoice Function using Netlify Function + Nodemailer
-        async function emailInvoice() {
-            const guestEmail = document.getElementById('guestEmail').value.trim();
-            const guestName = document.getElementById('guestName').value.trim();
-
-            if (!guestEmail) {
-                alert('Please enter the guest email address.');
-                return;
-            }
-
-            if (!guestName) {
-                alert('Please enter the guest name.');
-                return;
-            }
-
-            try {
-                // Show loading state
-                const emailBtn = event.target;
-                const originalText = emailBtn.innerText;
-                emailBtn.innerText = 'Sending...';
-                emailBtn.disabled = true;
-
-                // Generate PDF as blob
-                compute();
-                const el = document.getElementById('invoice');
-                el.style.display = 'block';
-
-                const opt = {
-                    margin: 0,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-
-                // Generate PDF blob and convert to base64
-                const pdfBlob = await html2pdf().from(el).set(opt).outputPdf('blob');
-
-                // Convert blob to base64
-                const base64Data = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result.split(',')[1]);
-                    reader.readAsDataURL(pdfBlob);
-                });
-
-                // Send to Netlify Function
-                const response = await fetch(NETLIFY_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        guestEmail: guestEmail,
-                        guestName: guestName,
-                        propertyName: 'On The Walk',
-                        pdfBase64: base64Data,
-                        fileName: 'OnTheWalk-Invoice.pdf'
-                    })
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    alert(`Invoice successfully sent to ${guestEmail}!`);
-                } else {
-                    throw new Error(result.error || result.details || 'Failed to send email');
-                }
-
-            } catch (error) {
-                console.error('Email sending failed:', error);
-                alert('Failed to send email. Please try again or download the PDF instead.');
-            } finally {
-                // Reset button state
-                const emailBtn = document.querySelector('button[onclick="emailInvoice()"]');
-                if (emailBtn) {
-                    emailBtn.innerText = originalText;
-                    emailBtn.disabled = false;
-                }
-            }
-        }
+        // Email functionality removed; PDF-only generation remains
 
         // Defaults on first load
         (function initDefaults() {
@@ -905,8 +820,8 @@
             document.getElementById('notesStyle').value = 'italic';
             document.getElementById('vatNumber').value = '458030991';
 
-            // Initialize EmailJS
-            initEmailJS();
+            // Initialize EmailJS (optional) - guard in case not included
+            if (typeof initEmailJS === 'function') initEmailJS();
         })();
     </script>
 </body>

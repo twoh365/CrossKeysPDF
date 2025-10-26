@@ -52,180 +52,7 @@
     .controls label {
       display: block;
       margin: 8px 0 4px;
-      font-weight: 600
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px
-    }
-
-    input,
-    select,
-    textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      font: inherit;
-    }
-
-    .btn {
-      padding: 10px 14px;
-      border: 1px solid var(--line);
-      background: #fff;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 700
-    }
-
-    .btn.primary {
-      background: var(--cream)
-    }
-
-    .btn.danger {
-      background: #fff3f3
-    }
-
-    .muted {
-      color: var(--ink-muted);
-      font-size: .9em
-    }
-
-    /* A4 canvas */
-    #invoice {
-      width: 210mm;
-      min-height: 297mm;
-      background: var(--cream);
-      color: var(--ink);
-      margin: 0 auto;
-      padding: 18mm 16mm;
-      border: 1px solid var(--line);
-      position: relative;
-      overflow: hidden;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-
-    /* === Watermark (background monogram) === */
-    #invoice::before {
-      content: "CK";
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 140mm;
-      font-weight: 800;
-      letter-spacing: .02em;
-      color: var(--watermark);
-      opacity: .03;
-      /* feather-light */
-      transform: translateY(10mm);
-      /* sit a touch lower than center */
-      pointer-events: none;
-      user-select: none;
-    }
-
-    /* Tiny footer crest */
-    #invoice::after {
-      content: "CK";
-      position: absolute;
-      bottom: 8mm;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 14mm;
-      font-weight: 800;
-      letter-spacing: .02em;
-      color: var(--watermark);
-      opacity: .04;
-      pointer-events: none;
-      user-select: none;
-    }
-
-    .header {
-      text-align: center;
-      position: relative;
-      z-index: 1
-    }
-
-    .logo {
-      max-width: 40mm;
-      height: auto;
-      background: transparent;
-      mix-blend-mode: multiply;
-    }
-
-    h2 {
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 20pt;
-      font-weight: 700;
-      margin: 10mm 0 6mm 0;
-      position: relative;
-      z-index: 1;
-    }
-
-    .divider {
-      border-top: 2px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      height: 0;
-      margin: 8mm 0;
-      position: relative;
-      z-index: 1;
-    }
-
-    .brandline .prop {
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-size: 12px;
-      color: #444;
-      font-weight: 700;
-    }
-
-    .details-box {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin-top: 6mm;
-      position: relative;
-      z-index: 1;
-    }
-
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px
-    }
-
-    .right {
-      text-align: right
-    }
-
-    .prop {
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-size: 12px;
-      color: #444;
-      font-weight: 800;
-    }
-
-    .val {
-      font-weight: 700
-    }
-
-    table {
-      width: 100%
-    }
-
-    td,
-    th {
-      padding: 6px 10px;
-      vertical-align: top
+      font-weight: 600;
     }
 
     .amount {
@@ -243,181 +70,14 @@
       text-align: left;
       text-transform: uppercase;
       font-size: .9em;
-      letter-spacing: .05em;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 6px;
-    }
-
-    table.charges td.right {
-      text-align: right
-    }
-
-    table.charges tbody tr:nth-child(even) {
-      background: #fdfcf9;
-    }
-
-    table.charges tbody tr td {
-      padding-top: 8px;
-      padding-bottom: 8px;
-    }
-
-    tfoot tr:first-child td,
-    tfoot tr:first-child th {
-      border-top: 2px solid var(--line);
-      padding-top: 10px;
-    }
-
-    .total {
-      font-size: 1.24em;
-      letter-spacing: .015em;
-    }
-
-    .note {
-      font-style: italic;
-      color: var(--ink-muted);
-      margin-top: 6px
-    }
-
-    .footer {
-      border-top: 1px solid var(--line);
-      margin-top: 10mm;
-      padding-top: 4mm;
-      text-align: center;
-      font-size: .95em;
-      color: var(--ink-muted);
-      position: relative;
-      z-index: 1;
-    }
-
-    .small {
-      font-size: .95em
-    }
-
-    @media screen {
-      table.charges tbody tr:hover td {
-        background: rgba(0, 0, 0, .03);
-      }
-    }
-
-    @media print {
-      .no-print {
-        display: none !important
-      }
-
-      body {
-        background: var(--cream)
-      }
-
-      #invoice {
-        border: none
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <div id="app">
-    <div class="card controls no-print">
-      <h1 style="margin:0 0 6px 0;">Crosskeys -- Invoice Maker</h1>
-      <div class="muted">Flat rate (rate or total) or custom nightly rates. VAT modes. Payment method. Full A4 cream
-        export.</div>
-
-      <div class="row" style="margin-top:12px;">
-        <div>
-          <label>Guest Name</label>
-          <input type="text" id="guestName" placeholder="Guest full name" />
+      // Email functionality removed; PDF-only generation remains
         </div>
-        <div>
-          <label>Guest Email</label>
-          <input type="email" id="guestEmail" placeholder="guest@example.com" />
-        </div>
+        <div></div>
       </div>
 
       <div class="row">
         <div>
-          <label>Room Type</label>
-          <select id="roomType">
-            <option>Double Room with Private Bathroom</option>
-            <option>2-Double Beds Room with Private Bathroom</option>
-            <option>Family Room with Private Bathroom</option>
-            <option>Single Room with Private Bathroom</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label>Check-In Date</label>
-          <input type="date" id="checkIn" />
-        </div>
-        <div>
-          <label>Check-Out Date</label>
-          <input type="date" id="checkOut" />
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label>Rate Mode</label>
-          <select id="rateMode">
-            <option value="flat">Flat Rate</option>
-            <option value="custom">Custom Nightly Rates</option>
-          </select>
-        </div>
-        <div>
-          <label>VAT Option</label>
-          <!-- Default to Included -->
-          <select id="vatOption">
-            <option value="off">VAT Off</option>
-            <option value="excluded">VAT Excluded (add 20%)</option>
-            <option value="included" selected>VAT Included (in rate)</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Flat rate block -->
-      <div id="flatRateBlock" class="row">
-        <div>
-          <label>Flat Rate Input</label>
-          <select id="flatInputMode">
-            <option value="rate">Rate per Night</option>
-            <option value="total">Total for Stay</option>
-          </select>
-        </div>
-        <div>
-          <label id="flatLabel">Rate per Night (£)</label>
-          <input type="number" id="rateOrTotal" step="0.01" placeholder="0.00" />
-        </div>
-      </div>
-
-      <!-- Custom rates block -->
-      <div id="customRateBlock" style="display:none;">
-        <label>Nightly Charges (one row per night)</label>
-        <table class="builder" id="nightsTable" style="width:100%;border-collapse:collapse;margin-top:8px">
-          <thead>
-            <tr>
-              <th style="text-align:left">Date</th>
-              <th style="text-align:left">Rate (£)</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="nightsTbody"></tbody>
-        </table>
-        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn" type="button" onclick="addNightRow()">Add Night</button>
-          <button class="btn" type="button" onclick="populateNightsFromRange()">Populate nights from date range</button>
-          <button class="btn danger" type="button" onclick="clearNights()">Clear nights</button>
-        </div>
-        <div class="muted" style="margin-top:6px;">
-          Tip: If Flat Rate is set to <em>Rate per Night</em>, populated rows use that rate.
-          If it's <em>Total for Stay</em>, the total is evenly split across the number of nights.
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:12px;">
-        <div>
-          <label>Invoice Date</label>
-          <input type="date" id="invoiceDate" />
+          // Email functionality removed; PDF-only generation remains
         </div>
         <div>
           <label>Payment Method</label>
@@ -460,7 +120,7 @@
 
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn primary" type="button" onclick="generateInvoice()">Download PDF</button>
-        <button class="btn primary" type="button" onclick="emailInvoice()">Email Invoice</button>
+  <!-- Email functionality removed: button intentionally omitted -->
         <button class="btn" type="button" onclick="previewInvoice()">Preview on Page</button>
       </div>
     </div>
@@ -579,8 +239,9 @@
     }
     function formatDateUK(iso) {
       if (!iso) return "";
-      const d = new Date(iso + "T00:00:00");
-      return d.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' });
+      // Parse as local date, not UTC
+      const [yyyy, mm, dd] = iso.split('-');
+      return `${dd}/${mm}/${yyyy}`;
     }
     function listNights(startISO, endISO) {
       const out = []; if (!startISO || !endISO) return out;
@@ -721,7 +382,7 @@
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>Accommodation</td>
-            <td>${formatDatePretty(iso)}</td>
+            <td>${formatDateUK(iso)}</td>
             <td class="right amount">${fmtGBP(amt)}</td>
           `;
           tbody.appendChild(tr);
@@ -742,7 +403,7 @@
           const r = parseFloat(tr.querySelector('.night-rate').value || "0");
           subtotal += r;
           const row = document.createElement('tr');
-          row.innerHTML = `<td>Accommodation</td><td>${formatDatePretty(d)}</td><td class="right amount">${fmtGBP(r)}</td>`;
+          row.innerHTML = `<td>Accommodation</td><td>${formatDateUK(d)}</td><td class="right amount">${fmtGBP(r)}</td>`;
           outBody.appendChild(row);
         });
         let vat = 0, total = subtotal;
@@ -887,6 +548,9 @@
       document.getElementById('vatOption').value = 'included';
       document.getElementById('notesStyle').value = 'italic';
       document.getElementById('vatNumber').value = '458030991';
+
+      // Initialize EmailJS (optional) - guard in case not included
+      if (typeof initEmailJS === 'function') initEmailJS();
     })();
   </script>
 </body>
