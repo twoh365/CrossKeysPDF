@@ -1,557 +1,196 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crosskeys -- Invoice Maker</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Crosskeys — Invoice</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root {
       --cream: #f5f0e9;
       --ink: #222;
       --line: #c8c3bb;
-      --ink-muted: #555;
-      --panel: #fffdfa;
-      --watermark: #1a1a1a;
-      /* base ink for watermark; we'll fade it heavily */
-    }
-
-    * {
-      box-sizing: border-box
+      --panel: #fffdfa
     }
 
     html,
     body {
-      height: 100%
+      height: 100%;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
     }
 
     body {
-      margin: 0;
       background: var(--cream);
-      color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", "Liberation Sans", sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      color: var(--ink)
     }
 
-    #app {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 20px
-    }
-
-    .card {
-      background: #fff;
+    #invoice {
+      width: 210mm;
+      min-height: 297mm;
+      background: var(--cream);
+      padding: 18mm 16mm;
       border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 16px;
-      margin: 0 0 16px 0;
+      box-sizing: border-box
     }
 
-    .controls label {
-      display: block;
-      margin: 8px 0 4px;
-      font-weight: 600;
+    #invoice::before {
+      content: "CK";
+      position: absolute;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 140mm;
+      opacity: .03
     }
 
-    .amount {
-      font-variant-numeric: tabular-nums;
-    }
-
-    table.charges {
-      border-collapse: collapse;
+    table {
       width: 100%;
-      position: relative;
-      z-index: 1;
+      border-collapse: collapse
     }
 
-    table.charges th {
-      text-align: left;
-      text-transform: uppercase;
-      font-size: .9em;
-      // Email functionality removed; PDF-only generation remains
-        </div>
-        <div></div>
-      </div>
+    td,
+    th {
+      padding: 6px 8px
+    }
 
-      <div class="row">
+    < !doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crosskeys — Invoice</title><script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script><style> :root {
+      --cream: #f5f0e9;
+      --ink: #222;
+      --line: #c8c3bb;
+      --panel: #fffdfa
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+    }
+
+    body {
+      background: var(--cream);
+      color: var(--ink)
+    }
+
+    #invoice {
+      width: 210mm;
+      min-height: 297mm;
+      background: var(--cream);
+      padding: 18mm 16mm;
+      border: 1px solid var(--line);
+      box-sizing: border-box
+    }
+
+    #invoice::before {
+      content: "CK";
+      position: absolute;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 140mm;
+      opacity: .03
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    td,
+    th {
+      padding: 6px 8px
+    }
+
+    .right {
+      text-align: right
+    }
+  </style>
+</head>
+
+<body>
+  <main id="app" style="max-width:960px;margin:20px auto">
+    <section style="margin-bottom:16px">
+      <h1 style="margin:.2em 0">Crosskeys — Invoice Maker</h1>
+      <div style="color:#666;font-size:.95em">PDF-only. Dates shown in DD/MM/YYYY.</div>
+    </section>
+
+    <section class="card" style="background:#fff;padding:12px;border:1px solid #e3e3e3;border-radius:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
-          // Email functionality removed; PDF-only generation remains
+          <label>Guest name</label>
+          <input id="guestName" type="text" style="width:100%;padding:8px;margin-top:6px">
         </div>
         <div>
-          <label>Payment Method</label>
-          <!-- Default to Booking.com. option -->
-          <select id="paymentMethod">
-            <option>Bank Transfer</option>
-            <option>Cheque</option>
-            <option>Cash</option>
-            <option>Card</option>
-            <option selected>Paid by Card Via Booking.com.</option>
-          </select>
+          <label>Room type</label>
+          <input id="roomType" type="text" style="width:100%;padding:8px;margin-top:6px"
+            value="Double Room with Private Bathroom">
         </div>
       </div>
 
-      <div class="row" style="margin-top:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
         <div>
-          <label>Payment Notes (optional)</label>
-          <textarea id="paymentNotes" rows="2" placeholder="e.g. Paid in cash on arrival"></textarea>
+          <label>Check-in</label>
+          <input id="checkIn" type="date" style="width:100%;padding:8px;margin-top:6px">
         </div>
         <div>
-          <label>Notes Style</label>
-          <select id="notesStyle">
-            <option value="normal">Normal</option>
-            <option value="italic" selected>Italic</option>
-          </select>
+          <label>Check-out</label>
+          <input id="checkOut" type="date" style="width:100%;padding:8px;margin-top:6px">
         </div>
       </div>
 
-      <div class="row" style="margin-top:12px;">
-        <div>
-          <label>VAT Number (optional)</label>
-          <input type="text" id="vatNumber" placeholder="e.g. GB123456789" />
-        </div>
-        <div></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button onclick="previewInvoice()" style="padding:8px 12px">Preview</button>
+        <button onclick="generateInvoice()" style="padding:8px 12px;background:#eee">Download PDF</button>
       </div>
+    </section>
 
-      <label style="margin-top:8px;">Footer Text</label>
-      <textarea id="footerText" rows="3">Thank you for choosing Crosskeys. 
-      For enquiries, please contact us via your reservation on Booking.com.  </textarea>
+    <div id="invoice" style="display:none;margin-top:18px;position:relative">
+      <header style="text-align:center;margin-bottom:12px">
+        <h2 style="margin:.2em 0;font-family:Georgia,serif">Crosskeys — Invoice</h2>
+      </header>
 
-      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn primary" type="button" onclick="generateInvoice()">Download PDF</button>
-  <!-- Email functionality removed: button intentionally omitted -->
-        <button class="btn" type="button" onclick="previewInvoice()">Preview on Page</button>
-      </div>
-    </div>
+      <section style="margin-bottom:8px">
+        <div><strong>Guest:</strong> <span id="outGuest"></span></div>
+        <div><strong>Room:</strong> <span id="outRoom"></span></div>
+        <div><strong>Invoice date:</strong> <span id="outInvoiceDate"></span></div>
+        <div><strong>Check-in:</strong> <span id="outCheckIn"></span></div>
+        <div><strong>Check-out:</strong> <span id="outCheckOut"></span></div>
+      </section>
 
-    <!-- PDF -->
-    <div id="invoice" role="document" aria-label="Invoice preview" style="display:none;">
-      <div class="header">
-        <img class="logo" src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/crosskeys-logo.png"
-          alt="Crosskeys Logo" />
-        <div class="brandline" style="margin-top:6px;">
-          <div class="prop">43 Lanark Road, Edinburgh EH14 1TL, Scotland</div>
-        </div>
-      </div>
-
-      <h2 style="text-align: center;">Invoice for Your Stay at Crosskeys</h2>
-      <div class="divider"></div>
-
-      <div class="details-box">
-        <div class="two-col small">
-          <div>
-            <div class="prop">Guest Name:</div>
-            <div id="outGuest" class="val"></div>
-            <div class="prop" style="margin-top:6px;">Room Type:</div>
-            <div id="outRoom"></div>
-          </div>
-          <div class="right">
-            <div><span class="prop">Invoice Date:</span> <span id="outInvoiceDate"></span></div>
-            <div><span class="prop">Check-In Date:</span> <span id="outCheckIn"></span></div>
-            <div><span class="prop">Check-Out Date:</span> <span id="outCheckOut"></span></div>
-            <div><span class="prop">Nights:</span> <span id="outNights"></span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Flat (always nightly lines) -->
-      <div id="flatChargesBlock" style="margin-top:8mm;">
-        <table class="charges">
+      <section>
+        <table>
           <thead>
             <tr>
-              <th>Description:</th>
-              <th>Date:</th>
-              <th>Cost:</th>
+              <th>Description</th>
+              <th>Date</th>
+              <th class="right">Amount</th>
             </tr>
           </thead>
-          <tbody id="outFlatNightRows"></tbody>
+          <tbody id="outRows"></tbody>
           <tfoot>
-            <tr id="vatRow" style="display:none;">
-              <td colspan="2" class="right">VAT (20%)</td>
-              <td class="right amount"><span id="outVAT"></span></td>
-            </tr>
             <tr>
-              <td colspan="2" class="right bold">Total Due</td>
-              <td class="right bold total amount"><span id="outTotal"></span></td>
+              <td colspan="2" class="right">Total</td>
+              <td class="right" id="outTotal"></td>
             </tr>
           </tfoot>
         </table>
-        <div id="vatNote" class="note" style="display:none;">VAT of 20% is included in the rate.</div>
-      </div>
-
-      <!-- Custom nightly -->
-      <div id="customChargesBlock" style="margin-top:8mm;display:none;">
-        <table class="charges">
-          <thead>
-            <tr>
-              <th>Description:</th>
-              <th>Date:</th>
-              <th>Cost:</th>
-            </tr>
-          </thead>
-          <tbody id="outNightRows"></tbody>
-          <tfoot>
-            <tr>
-              <td colspan="2" class="right bold">Subtotal</td>
-              <td class="right bold amount"><span id="outSubtotalCustom"></span></td>
-            </tr>
-            <tr id="vatRowCustom" style="display:none;">
-              <td colspan="2" class="right">VAT (20%)</td>
-              <td class="right amount"><span id="outVATCustom"></span></td>
-            </tr>
-            <tr>
-              <td colspan="2" class="right bold">Total Due</td>
-              <td class="right bold total amount"><span id="outTotalCustom"></span></td>
-            </tr>
-          </tfoot>
-        </table>
-        <div id="vatNoteCustom" class="note" style="display:none;">VAT of 20% is included in the rate.</div>
-      </div>
-
-      <div style="margin-top:8mm;" class="small">
-        <span class="prop">Payment Method:</span> <span id="outPaymentMethod"></span>
-      </div>
-      <div style="margin-top:2mm;" class="small" id="outPaymentNotesWrapper" hidden>
-        <span class="prop">Notes:</span> <span id="outPaymentNotes"></span>
-      </div>
-
-      <div class="footer" id="outFooter"></div>
-
-      <div id="outVATNumber" class="small" style="display:none; margin-top:8mm; text-align:center; color: #666;"></div>
+      </section>
     </div>
-  </div>
+  </main>
 
   <script>
-    /* Currency (GBP) */
-    const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const fmtGBP = n => gbp.format((+n) || 0);
+    // small helpers
+    const fmtGBP = n => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(Number(n || 0));
+    function formatDateUK(iso) { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}` }
 
-    /* Date helpers */
-    function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return s[(v - 20) % 10] || s[v] || s[0]; }
-    function formatDatePretty(iso) {
-      if (!iso) return "";
-      const d = new Date(iso + "T00:00:00");
-      const day = d.getDate();
-      const month = d.toLocaleString('en-GB', { month: 'long' });
-      const year = d.getFullYear();
-      return `${day}${ordinal(day)} of ${month} ${year}`;
-    }
-    function formatDateUK(iso) {
-      if (!iso) return "";
-      // Parse as local date, not UTC
-      const [yyyy, mm, dd] = iso.split('-');
-      return `${dd}/${mm}/${yyyy}`;
-    }
-    function listNights(startISO, endISO) {
-      const out = []; if (!startISO || !endISO) return out;
-      let d = new Date(startISO + "T00:00:00"); const end = new Date(endISO + "T00:00:00");
-      while (d < end) {
-        // Format as YYYY-MM-DD in local time
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        out.push(`${yyyy}-${mm}-${dd}`);
-        d.setDate(d.getDate() + 1);
-      }
-      return out;
-    }
-    function splitEvenly(total, n) {
-      const count = Math.max(1, n | 0);
-      const cents = Math.round((+total || 0) * 100);
-      const base = Math.floor(cents / count);
-      const remainder = cents - base * count;
-      const arr = Array(count).fill(base);
-      for (let i = 0; i < remainder; i++) arr[i] += 1;
-      return arr.map(c => c / 100);
-    }
+    function listNights(startISO, endISO) { const out = []; if (!startISO || !endISO) return out; let d = new Date(startISO + 'T00:00:00'); const end = new Date(endISO + 'T00:00:00'); while (d < end) { const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const dd = String(d.getDate()).padStart(2, '0'); out.push(`${y}-${m}-${dd}`); d.setDate(d.getDate() + 1); } return out }
 
-    /* Controls helpers */
-    function addNightRow(date = "", rate = "") {
-      const tbody = document.getElementById('nightsTbody');
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td><input type="date" class="night-date" value="${date}"/></td>
-        <td><input type="number" class="night-rate" step="0.01" placeholder="0.00" value="${rate}"/></td>
-        <td class="right"><button type="button" class="btn" onclick="this.closest('tr').remove()">Remove</button></td>`;
-      tbody.appendChild(tr);
-    }
-    function clearNights() { document.getElementById('nightsTbody').innerHTML = ""; }
-    function populateNightsFromRange() {
-      const checkIn = document.getElementById('checkIn').value;
-      const checkOut = document.getElementById('checkOut').value;
-      const nights = listNights(checkIn, checkOut);
-      if (nights.length === 0) return;
-      clearNights();
-      const flatMode = document.getElementById('flatInputMode').value;
-      const val = parseFloat(document.getElementById('rateOrTotal').value || "0");
-      let amounts = [];
-      if (flatMode === 'rate') { amounts = Array(nights.length).fill(val); }
-      else { amounts = splitEvenly(val, nights.length); }
-      nights.forEach((iso, idx) => addNightRow(iso, amounts[idx].toFixed(2)));
-    }
-    function toggleRateMode() {
-      const mode = document.getElementById('rateMode').value;
-      document.getElementById('flatRateBlock').style.display = (mode === 'flat') ? 'grid' : 'none';
-      document.getElementById('customRateBlock').style.display = (mode === 'custom') ? 'block' : 'none';
-      document.getElementById('flatChargesBlock').style.display = (mode === 'flat') ? 'block' : 'none';
-      document.getElementById('customChargesBlock').style.display = (mode === 'custom') ? 'block' : 'none';
-      if (mode === 'custom' && document.querySelectorAll('#nightsTbody tr').length === 0) addNightRow();
-    }
-    document.getElementById('rateMode').addEventListener('change', toggleRateMode);
-    document.getElementById('flatInputMode').addEventListener('change', () => {
-      const mode = document.getElementById('flatInputMode').value;
-      document.getElementById('flatLabel').innerText = (mode === 'rate' ? 'Rate per Night (£)' : 'Total for Stay (£)');
-    });
-    window.addEventListener('load', () => {
-      toggleRateMode();
-      // Ensure defaults (already set in markup) are reflected in preview outputs on first render
-      // Set Payment Method default explicitly in case browsers ignore the 'selected' attribute
-      document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
-      // Same for VAT Included
-      document.getElementById('vatOption').value = 'included';
-    });
+    function computeRows() { const checkIn = document.getElementById('checkIn').value; const checkOut = document.getElementById('checkOut').value; const nights = listNights(checkIn, checkOut); const rows = []; if (nights.length === 0) { rows.push({ desc: 'Accommodation', date: checkIn || '', amt: 0 }); } else { nights.forEach(d => rows.push({ desc: 'Accommodation', date: d, amt: 0 })); } return rows }
 
-    /* Compute + render */
-    function compute() {
-      const guest = document.getElementById('guestName').value.trim();
-      const checkIn = document.getElementById('checkIn').value;
-      const checkOut = document.getElementById('checkOut').value;
-      const roomType = document.getElementById('roomType').value;
-      const vatOption = document.getElementById('vatOption').value;
-      const footer = document.getElementById('footerText').value;
-      const mode = document.getElementById('rateMode').value;
-      const invoiceDate = document.getElementById('invoiceDate').value;
-      const paymentMethod = document.getElementById('paymentMethod').value;
-      const paymentNotes = document.getElementById('paymentNotes').value.trim();
-      const notesStyle = document.getElementById('notesStyle').value;
-      const flatInputMode = document.getElementById('flatInputMode').value;
-      const rateOrTotal = parseFloat(document.getElementById('rateOrTotal').value || "0");
-      const vatNumber = document.getElementById('vatNumber').value.trim();
+    function previewInvoice() { const guest = document.getElementById('guestName').value; const room = document.getElementById('roomType').value; const invDate = new Date(); const isoInv = `${invDate.getFullYear()}-${String(invDate.getMonth() + 1).padStart(2, '0')}-${String(invDate.getDate()).padStart(2, '0')}`; document.getElementById('outGuest').innerText = guest; document.getElementById('outRoom').innerText = room; document.getElementById('outInvoiceDate').innerText = formatDateUK(isoInv); const checkIn = document.getElementById('checkIn').value; const checkOut = document.getElementById('checkOut').value; document.getElementById('outCheckIn').innerText = formatDateUK(checkIn); document.getElementById('outCheckOut').innerText = formatDateUK(checkOut); const rows = computeRows(); const tbody = document.getElementById('outRows'); tbody.innerHTML = ''; let total = 0; rows.forEach(r => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${r.desc}</td><td>${formatDateUK(r.date)}</td><td class="right">${fmtGBP(r.amt)}</td>`; tbody.appendChild(tr); total += r.amt; }); document.getElementById('outTotal').innerText = fmtGBP(total); document.getElementById('invoice').style.display = 'block'; }
 
-      const nightDates = listNights(checkIn, checkOut);
-      const n = nightDates.length || (checkIn && checkOut ? 1 : 0);
+    function generateInvoice() { previewInvoice(); const el = document.getElementById('invoice'); const opt = { margin: 0, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }; html2pdf().from(el).set(opt).toPdf().get('pdf').then(pdf => pdf.save('Crosskeys-Invoice.pdf')).catch(() => { html2pdf().from(el).set(opt).outputPdf('blob').then(blob => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'Crosskeys-Invoice.pdf'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 500); }); }); }
 
-      // Header (DD/MM/YYYY)
-      document.getElementById('outGuest').innerText = guest;
-      document.getElementById('outRoom').innerText = roomType;
-      document.getElementById('outCheckIn').innerText = formatDateUK(checkIn);
-      document.getElementById('outCheckOut').innerText = formatDateUK(checkOut);
-      document.getElementById('outNights').innerText = nightDates.length || (checkIn && checkOut ? 1 : "");
-      document.getElementById('outInvoiceDate').innerText = formatDateUK(invoiceDate);
-
-      // Payment method + notes
-      document.getElementById('outPaymentMethod').innerText = paymentMethod;
-      const notesWrap = document.getElementById('outPaymentNotesWrapper');
-      const notesEl = document.getElementById('outPaymentNotes');
-      if (paymentNotes) {
-        notesWrap.hidden = false;
-        notesEl.innerText = paymentNotes;
-        notesEl.style.fontStyle = (notesStyle === 'italic' ? 'italic' : 'normal');
-        notesEl.style.color = (notesStyle === 'italic' ? 'var(--ink-muted)' : 'inherit');
-      } else {
-        notesWrap.hidden = true;
-      }
-
-      document.getElementById('outFooter').innerText = footer;
-
-      // VAT Number display with company details
-      const vatNumberEl = document.getElementById('outVATNumber');
-      if (vatNumber) {
-        vatNumberEl.innerHTML = `We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. ${vatNumber}`;
-        vatNumberEl.style.display = 'block';
-      } else {
-        vatNumberEl.style.display = 'none';
-      }
-
-      // Reset VAT UI
-      document.getElementById('vatRow').style.display = 'none';
-      document.getElementById('vatNote').style.display = 'none';
-      document.getElementById('vatRowCustom').style.display = 'none';
-      document.getElementById('vatNoteCustom').style.display = 'none';
-
-      if (mode === 'flat') {
-        const tbody = document.getElementById('outFlatNightRows'); tbody.innerHTML = "";
-        let amounts = [];
-        if (flatInputMode === 'rate') { amounts = Array(Math.max(1, n)).fill(rateOrTotal); }
-        else { amounts = splitEvenly(rateOrTotal, Math.max(1, n)); }
-        const datesToUse = nightDates.length ? nightDates : [checkIn || invoiceDate];
-        let subtotal = 0;
-        datesToUse.forEach((iso, idx) => {
-          const amt = amounts[idx] ?? amounts[amounts.length - 1] ?? 0;
-          subtotal += amt;
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>Accommodation</td>
-            <td>${formatDateUK(iso)}</td>
-            <td class="right amount">${fmtGBP(amt)}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-        let vat = 0, total = subtotal;
-        if (vatOption === 'excluded') { vat = subtotal * 0.20; total = subtotal + vat; document.getElementById('vatRow').style.display = 'table-row'; }
-        else if (vatOption === 'included') { document.getElementById('vatNote').style.display = 'block'; }
-        document.getElementById('outVAT').innerText = fmtGBP(vat);
-        document.getElementById('outTotal').innerText = fmtGBP(total);
-      } else {
-        // Custom nightly
-        const rows = [...document.querySelectorAll('#nightsTbody tr')];
-        if (rows.length === 0) addNightRow();
-        let subtotal = 0;
-        const outBody = document.getElementById('outNightRows'); outBody.innerHTML = "";
-        rows.forEach(tr => {
-          const d = tr.querySelector('.night-date').value;
-          const r = parseFloat(tr.querySelector('.night-rate').value || "0");
-          subtotal += r;
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>Accommodation</td><td>${formatDateUK(d)}</td><td class="right amount">${fmtGBP(r)}</td>`;
-          outBody.appendChild(row);
-        });
-        let vat = 0, total = subtotal;
-        if (vatOption === 'excluded') { vat = subtotal * 0.20; total = subtotal + vat; document.getElementById('vatRowCustom').style.display = 'table-row'; }
-        else if (vatOption === 'included') { document.getElementById('vatNoteCustom').style.display = 'block'; }
-        document.getElementById('outSubtotalCustom').innerText = fmtGBP(subtotal);
-        document.getElementById('outVATCustom').innerText = fmtGBP(vat);
-        document.getElementById('outTotalCustom').innerText = fmtGBP(total);
-      }
-    }
-
-    function previewInvoice() { compute(); document.getElementById('invoice').style.display = 'block'; document.getElementById('invoice').scrollIntoView({ behavior: 'smooth' }); }
-    function generateInvoice() {
-      compute();
-      const el = document.getElementById('invoice');
-      el.style.display = 'block';
-
-      const opt = {
-        margin: 0,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      const filename = 'Crosskeys-Invoice.pdf';
-
-      // Preferred: force a file download (no new tab)
-      html2pdf().from(el).set(opt).toPdf().get('pdf').then(pdf => {
-        pdf.save(filename);
-      }).catch(() => {
-        // Fallback: manual blob download (also avoids opening a new tab)
-        html2pdf().from(el).set(opt).outputPdf('blob').then(blob => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 500);
-        });
-      });
-    }
-
-
-    // Netlify Function Configuration
-    // This will work automatically when deployed to Netlify
-    const NETLIFY_FUNCTION_URL = '/.netlify/functions/send-invoice';
-
-    // Email Invoice Function using Netlify Function + Nodemailer
-    async function emailInvoice() {
-      const guestEmail = document.getElementById('guestEmail').value.trim();
-      const guestName = document.getElementById('guestName').value.trim();
-
-      if (!guestEmail) {
-        alert('Please enter the guest email address.');
-        return;
-      }
-
-      if (!guestName) {
-        alert('Please enter the guest name.');
-        return;
-      }
-
-      try {
-        // Show loading state
-        const emailBtn = event.target;
-        const originalText = emailBtn.innerText;
-        emailBtn.innerText = 'Sending...';
-        emailBtn.disabled = true;
-
-        // Generate PDF as blob
-        compute();
-        const el = document.getElementById('invoice');
-        el.style.display = 'block';
-
-        const opt = {
-          margin: 0,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // Generate PDF blob and convert to base64
-        const pdfBlob = await html2pdf().from(el).set(opt).outputPdf('blob');
-
-        // Convert blob to base64
-        const base64Data = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(',')[1]);
-          reader.readAsDataURL(pdfBlob);
-        });
-
-        // Send to Netlify Function
-        const response = await fetch(NETLIFY_FUNCTION_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            guestEmail: guestEmail,
-            guestName: guestName,
-            propertyName: 'Crosskeys',
-            pdfBase64: base64Data,
-            fileName: 'Crosskeys-Invoice.pdf'
-          })
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          alert(`Invoice successfully sent to ${guestEmail}!`);
-        } else {
-          throw new Error(result.error || result.details || 'Failed to send email');
-        }
-
-      } catch (error) {
-        console.error('Email sending failed:', error);
-        alert('Failed to send email. Please try again or download the PDF instead.');
-      } finally {
-        // Reset button state
-        const emailBtn = document.querySelector('button[onclick="emailInvoice()"]');
-        if (emailBtn) {
-          emailBtn.innerText = originalText;
-          emailBtn.disabled = false;
-        }
-      }
-    }    // Defaults on first load
-    (function initDefaults() {
-      const t = new Date();
-      const yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0');
-      const iso = `${yyyy}-${mm}-${dd}`;
-      // Set all date fields to today if empty
-      const inv = document.getElementById('invoiceDate');
-      if (inv && !inv.value) inv.value = iso;
-      const checkIn = document.getElementById('checkIn');
-      if (checkIn && !checkIn.value) checkIn.value = iso;
-      const checkOut = document.getElementById('checkOut');
-      if (checkOut && !checkOut.value) checkOut.value = iso;
-
-      // Force defaults (in case browser ignores selected)
-      document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
-      document.getElementById('vatOption').value = 'included';
-      document.getElementById('notesStyle').value = 'italic';
-      document.getElementById('vatNumber').value = '458030991';
-
-      // Initialize EmailJS (optional) - guard in case not included
-      if (typeof initEmailJS === 'function') initEmailJS();
-    })();
+    // sensible defaults on load
+    (function () { const t = new Date(); const iso = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; if (!document.getElementById('checkIn').value) document.getElementById('checkIn').value = iso; if (!document.getElementById('checkOut').value) document.getElementById('checkOut').value = iso; })();
   </script>
 </body>
 
