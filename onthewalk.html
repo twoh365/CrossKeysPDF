@@ -21,20 +21,6 @@
         }
 
         html,
-        < !doctype html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>On The Walk — Invoice Maker</title><script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script><style> :root {
-            --cream: #f5f0e9;
-            --ink: #222;
-            --line: #c8c3bb;
-            --ink-muted: #555;
-            --panel: #fffdfa;
-            --watermark: #1a1a1a
-        }
-
-        * {
-            box-sizing: border-box
-        }
-
-        html,
         body {
             height: 100%
         }
@@ -340,19 +326,8 @@
                 cream export.</div>
 
             <div class="row" style="margin-top:12px;">
-<<<<<<< HEAD
                 <div><label>Guest Name</label><input type="text" id="guestName" placeholder="Guest full name" /></div>
                 <div></div>
-=======
-                <div>
-                    <label>Guest Name</label>
-                    <input type="text" id="guestName" placeholder="Guest full name" />
-                </div>
-                <div>
-                    <label>Guest Email</label>
-                    <input type="email" id="guestEmail" placeholder="guest@example.com" />
-                </div>
->>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
             </div>
 
             <div class="row">
@@ -441,116 +416,117 @@
             <textarea id="footerText"
                 rows="3">Thank you for choosing On The Walk. For enquiries, please contact us via your reservation on Booking.com.</textarea>
 
-<<<<<<< HEAD
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn primary" type="button"
-                    onclick="generateInvoice()">Download PDF</button><button class="btn" type="button"
-                    onclick="previewInvoice()">Preview on Page</button></div>
-=======
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn primary" type="button" onclick="generateInvoice()">Download PDF</button>
-                <button class="btn primary" type="button" onclick="emailInvoice()">Email Invoice</button>
-                <button class="btn" type="button" onclick="previewInvoice()">Preview on Page</button>
+            <<<<<<< HEAD <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn primary"
+                    type="button" onclick="generateInvoice()">Download PDF</button><button class="btn" type="button"
+                    onclick="previewInvoice()">Preview on Page</button>
+        </div>
+        =======
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn primary" type="button" onclick="generateInvoice()">Download PDF</button>
+            <button class="btn primary" type="button" onclick="emailInvoice()">Email Invoice</button>
+            <button class="btn" type="button" onclick="previewInvoice()">Preview on Page</button>
+        </div>
+        >>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
+    </div>
+
+    <!-- PDF preview -->
+    <div id="invoice" role="document" aria-label="Invoice preview" style="display:none;">
+        <div class="header">
+            <div class="logo-container">
+                <img id="logoImg"
+                    src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/onthewalk-logo.png"
+                    alt="On The Walk Logo" class="logo" crossorigin="anonymous"
+                    onerror="this.style.display='none';document.getElementById('logoText').style.display='block'">
+                <div id="logoText" style="display:none;font-family:Georgia,serif;font-weight:800;letter-spacing:.06em">
+                    ON THE WALK
+                </div>
             </div>
->>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
+            <div class="brandline" style="margin-top:6px;">
+                <div class="prop">18 Albert Pl, Edinburgh EH7 5HN, Scotland</div>
+            </div>
         </div>
 
-        <!-- PDF preview -->
-        <div id="invoice" role="document" aria-label="Invoice preview" style="display:none;">
-            <div class="header">
-                <div class="logo-container">
-                    <img id="logoImg"
-                        src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/onthewalk-logo.png"
-                        alt="On The Walk Logo" class="logo" crossorigin="anonymous"
-                        onerror="this.style.display='none';document.getElementById('logoText').style.display='block'">
-                    <div id="logoText"
-                        style="display:none;font-family:Georgia,serif;font-weight:800;letter-spacing:.06em">ON THE WALK
-                    </div>
+        <h2 style="text-align:center;">Invoice for Your Stay at On The Walk</h2>
+        <div class="divider"></div>
+
+        <div class="details-box">
+            <div class="two-col small">
+                <div>
+                    <div class="prop">Guest Name:</div>
+                    <div id="outGuest" class="val"></div>
+                    <div class="prop" style="margin-top:6px;">Room Type:</div>
+                    <div id="outRoom"></div>
                 </div>
-                <div class="brandline" style="margin-top:6px;">
-                    <div class="prop">18 Albert Pl, Edinburgh EH7 5HN, Scotland</div>
+                <div class="right">
+                    <div><span class="prop">Invoice Date:</span> <span id="outInvoiceDate"></span></div>
+                    <div><span class="prop">Check-In Date:</span> <span id="outCheckIn"></span></div>
+                    <div><span class="prop">Check-Out Date:</span> <span id="outCheckOut"></span></div>
+                    <div><span class="prop">Nights:</span> <span id="outNights"></span></div>
                 </div>
-            </div>
-
-            <h2 style="text-align:center;">Invoice for Your Stay at On The Walk</h2>
-            <div class="divider"></div>
-
-            <div class="details-box">
-                <div class="two-col small">
-                    <div>
-                        <div class="prop">Guest Name:</div>
-                        <div id="outGuest" class="val"></div>
-                        <div class="prop" style="margin-top:6px;">Room Type:</div>
-                        <div id="outRoom"></div>
-                    </div>
-                    <div class="right">
-                        <div><span class="prop">Invoice Date:</span> <span id="outInvoiceDate"></span></div>
-                        <div><span class="prop">Check-In Date:</span> <span id="outCheckIn"></span></div>
-                        <div><span class="prop">Check-Out Date:</span> <span id="outCheckOut"></span></div>
-                        <div><span class="prop">Nights:</span> <span id="outNights"></span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="flatChargesBlock" style="margin-top:8mm;">
-                <table class="charges">
-                    <thead>
-                        <tr>
-                            <th>Description:</th>
-                            <th>Date:</th>
-                            <th>Cost:</th>
-                        </tr>
-                    </thead>
-                    <tbody id="outFlatNightRows"></tbody>
-                    <tfoot>
-                        <tr id="vatRow" style="display:none;">
-                            <td colspan="2" class="right">VAT (20%)</td>
-                            <td class="right amount"><span id="outVAT"></span></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" class="right bold">Total Due</td>
-                            <td class="right bold total amount"><span id="outTotal"></span></td>
-                        </tr>
-                    </tfoot>
-                </table>
-                <div id="vatNote" class="note" style="display:none;">VAT of 20% is included in the rate.</div>
-            </div>
-
-            <div id="customChargesBlock" style="margin-top:8mm;display:none;">
-                <table class="charges">
-                    <thead>
-                        <tr>
-                            <th>Description:</th>
-                            <th>Date:</th>
-                            <th>Cost:</th>
-                        </tr>
-                    </thead>
-                    <tbody id="outNightRows"></tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="2" class="right bold">Subtotal</td>
-                            <td class="right bold amount"><span id="outSubtotalCustom"></span></td>
-                        </tr>
-                        <tr id="vatRowCustom" style="display:none;">
-                            <td colspan="2" class="right">VAT (20%)</td>
-                            <td class="right amount"><span id="outVATCustom"></span></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" class="right bold">Total Due</td>
-                            <td class="right bold total amount"><span id="outTotalCustom"></span></td>
-                        </tr>
-                    </tfoot>
-                </table>
-                <div id="vatNoteCustom" class="note" style="display:none;">VAT of 20% is included in the rate.</div>
-            </div>
-
-            <div style="margin-top:8mm;" class="small"><span class="prop">Payment Method:</span> <span
-                    id="outPaymentMethod"></span></div>
-            <div style="margin-top:2mm;" class="small" id="outPaymentNotesWrapper" hidden><span
-                    class="prop">Notes:</span> <span id="outPaymentNotes"></span></div>
-            <div class="footer" id="outFooter"></div>
-            <div id="outVATNumber" class="small" style="display:none;margin-top:8mm;text-align:center;color:#666;">
             </div>
         </div>
+
+        <div id="flatChargesBlock" style="margin-top:8mm;">
+            <table class="charges">
+                <thead>
+                    <tr>
+                        <th>Description:</th>
+                        <th>Date:</th>
+                        <th>Cost:</th>
+                    </tr>
+                </thead>
+                <tbody id="outFlatNightRows"></tbody>
+                <tfoot>
+                    <tr id="vatRow" style="display:none;">
+                        <td colspan="2" class="right">VAT (20%)</td>
+                        <td class="right amount"><span id="outVAT"></span></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="right bold">Total Due</td>
+                        <td class="right bold total amount"><span id="outTotal"></span></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <div id="vatNote" class="note" style="display:none;">VAT of 20% is included in the rate.</div>
+        </div>
+
+        <div id="customChargesBlock" style="margin-top:8mm;display:none;">
+            <table class="charges">
+                <thead>
+                    <tr>
+                        <th>Description:</th>
+                        <th>Date:</th>
+                        <th>Cost:</th>
+                    </tr>
+                </thead>
+                <tbody id="outNightRows"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" class="right bold">Subtotal</td>
+                        <td class="right bold amount"><span id="outSubtotalCustom"></span></td>
+                    </tr>
+                    <tr id="vatRowCustom" style="display:none;">
+                        <td colspan="2" class="right">VAT (20%)</td>
+                        <td class="right amount"><span id="outVATCustom"></span></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="right bold">Total Due</td>
+                        <td class="right bold total amount"><span id="outTotalCustom"></span></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <div id="vatNoteCustom" class="note" style="display:none;">VAT of 20% is included in the rate.</div>
+        </div>
+
+        <div style="margin-top:8mm;" class="small"><span class="prop">Payment Method:</span> <span
+                id="outPaymentMethod"></span></div>
+        <div style="margin-top:2mm;" class="small" id="outPaymentNotesWrapper" hidden><span class="prop">Notes:</span>
+            <span id="outPaymentNotes"></span></div>
+        <div class="footer" id="outFooter"></div>
+        <div class="small" style="margin-top:8mm;text-align:center;color:#666;">
+            We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. 458030991
+        </div>
+    </div>
     </div>
 
     <script>
@@ -560,12 +536,6 @@
 
         /* Date helpers */
         function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return s[(v - 20) % 10] || s[v] || s[0]; }
-<<<<<<< HEAD
-        function formatDatePretty(iso) { if (!iso) return ""; const d = new Date(iso + "T00:00:00"); const day = d.getDate(); const month = d.toLocaleString('en-GB', { month: 'long' }); const year = d.getFullYear(); return `${day}${ordinal(day)} of ${month} ${year}`; }
-        function formatDateUK(iso) { if (!iso) return ""; const [yyyy, mm, dd] = iso.split('-'); return `${dd}/${mm}/${yyyy}`; }
-        function listNights(startISO, endISO) { const out = []; if (!startISO || !endISO) return out; let d = new Date(startISO + "T00:00:00"); const end = new Date(endISO + "T00:00:00"); while (d < end) { const yyyy = d.getFullYear(); const mm = String(d.getMonth() + 1).padStart(2, '0'); const dd = String(d.getDate()).padStart(2, '0'); out.push(`${yyyy}-${mm}-${dd}`); d.setDate(d.getDate() + 1); } return out; }
-        function splitEvenly(total, n) { const count = Math.max(1, n | 0); const cents = Math.round((+total || 0) * 100); const base = Math.floor(cents / count); const remainder = cents - base * count; const arr = Array(count).fill(base); for (let i = 0; i < remainder; i++) arr[i] += 1; return arr.map(c => c / 100); }
-=======
         function formatDatePretty(iso) {
             if (!iso) return "";
             // Parse as local date to avoid timezone issues
@@ -606,14 +576,10 @@
             for (let i = 0; i < remainder; i++) arr[i] += 1;
             return arr.map(c => c / 100);
         }
->>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
 
-<<<<<<< HEAD
         /* Wait for images to load */
         function waitForImages(root, timeoutMs = 3000) { const imgs = Array.from((root || document).querySelectorAll('img')); if (!imgs.length) return Promise.resolve(); return new Promise(resolve => { let remaining = imgs.length; const done = () => { if (--remaining <= 0) resolve(); }; imgs.forEach(img => { if (img.complete && img.naturalWidth !== 0) return done(); const onEnd = () => { img.removeEventListener('load', onEnd); img.removeEventListener('error', onEnd); done(); }; img.addEventListener('load', onEnd); img.addEventListener('error', onEnd); }); setTimeout(resolve, timeoutMs); }); }
 
-=======
->>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
         /* Controls helpers */
         function addNightRow(date = "", rate = "") { const tbody = document.getElementById('nightsTbody'); const tr = document.createElement('tr'); tr.innerHTML = `<td><input type="date" class="night-date" value="${date}"/></td><td><input type="number" class="night-rate" step="0.01" placeholder="0.00" value="${rate}"/></td><td class="right"><button type="button" class="btn" onclick="this.closest('tr').remove()">Remove</button></td>`; tbody.appendChild(tr); }
         function clearNights() { document.getElementById('nightsTbody').innerHTML = ''; }
@@ -633,10 +599,6 @@
             document.getElementById('vatRow').style.display = 'none'; document.getElementById('vatNote').style.display = 'none'; document.getElementById('vatRowCustom').style.display = 'none'; document.getElementById('vatNoteCustom').style.display = 'none';
 
             if (mode === 'flat') {
-<<<<<<< HEAD
-                const tbody = document.getElementById('outFlatNightRows'); tbody.innerHTML = ''; let amounts = []; if (flatInputMode === 'rate') amounts = Array(Math.max(1, n)).fill(rateOrTotal); else amounts = splitEvenly(rateOrTotal, Math.max(1, n)); const datesToUse = nightDates.length ? nightDates : [checkIn || invoiceDate]; let subtotal = 0; datesToUse.forEach((iso, idx) => { const amt = amounts[idx] ?? amounts[amounts.length - 1] ?? 0; subtotal += amt; const tr = document.createElement('tr'); tr.innerHTML = `<td>Accommodation</td><td>${formatDateUK(iso)}</td><td class="right amount">${fmtGBP(amt)}</td>`; tbody.appendChild(tr); }); let vat = 0, total = subtotal; if (vatOption === 'excluded') { vat = subtotal * 0.20; total = subtotal + vat; document.getElementById('vatRow').style.display = 'table-row'; } else if (vatOption === 'included') { document.getElementById('vatNote').style.display = 'block'; } document.getElementById('outVAT').innerText = fmtGBP(vat); document.getElementById('outTotal').innerText = fmtGBP(total);
-            } else { const rows = [...document.querySelectorAll('#nightsTbody tr')]; if (rows.length === 0) addNightRow(); let subtotal = 0; const outBody = document.getElementById('outNightRows'); outBody.innerHTML = ''; rows.forEach(tr => { const d = tr.querySelector('.night-date').value; const r = parseFloat(tr.querySelector('.night-rate').value || '0'); subtotal += r; const row = document.createElement('tr'); row.innerHTML = `<td>Accommodation</td><td>${formatDateUK(d)}</td><td class="right amount">${fmtGBP(r)}</td>`; outBody.appendChild(row); }); let vat = 0, total = subtotal; if (vatOption === 'excluded') { vat = subtotal * 0.20; total = subtotal + vat; document.getElementById('vatRowCustom').style.display = 'table-row'; } else if (vatOption === 'included') { document.getElementById('vatNoteCustom').style.display = 'block'; } document.getElementById('outSubtotalCustom').innerText = fmtGBP(subtotal); document.getElementById('outVATCustom').innerText = fmtGBP(vat); document.getElementById('outTotalCustom').innerText = fmtGBP(total); }
-=======
                 const tbody = document.getElementById('outFlatNightRows'); tbody.innerHTML = "";
                 let amounts = [];
                 if (flatInputMode === 'rate') { amounts = Array(Math.max(1, n)).fill(rateOrTotal); }
@@ -680,39 +642,28 @@
                 document.getElementById('outVATCustom').innerText = fmtGBP(vat);
                 document.getElementById('outTotalCustom').innerText = fmtGBP(total);
             }
->>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
         }
 
         function previewInvoice() { compute(); document.getElementById('invoice').style.display = 'block'; document.getElementById('invoice').scrollIntoView({ behavior: 'smooth' }); }
-<<<<<<< HEAD
 
         async function generateInvoice() {
-            compute(); const el = document.getElementById('invoice'); el.style.display = 'block'; await waitForImages(el, 3000); try { window.scrollTo(0, 0); } catch (e) { } const prevOverflow = el.style.overflow; el.style.overflow = 'visible'; await new Promise(r => setTimeout(r, 140)); const opt = { margin: [8, 8, 8, 8], image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'] } }; const filename = 'OnTheWalk-Invoice.pdf'; try { await html2pdf().from(el).set(opt).save(filename); } catch (e) { try { const blob = await html2pdf().from(el).set(opt).outputPdf('blob'); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 500); } catch (err) { console.error('PDF generation failed', err); alert('Failed to generate PDF. Please try previewing and then download.'); } } finally { el.style.overflow = prevOverflow; }
-=======
-        function generateInvoice() {
             compute();
             const el = document.getElementById('invoice');
             el.style.display = 'block';
->>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
-
-<<<<<<< HEAD
-            // Defaults on first load
-            (function initDefaults() { const t = new Date(); const yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0'); const iso = `${yyyy}-${mm}-${dd}`; const inv = document.getElementById('invoiceDate'); if (inv && !inv.value) inv.value = iso; const ci = document.getElementById('checkIn'); if (ci && !ci.value) ci.value = iso; const co = document.getElementById('checkOut'); if (co && !co.value) co.value = iso; document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.'; document.getElementById('vatOption').value = 'included'; document.getElementById('notesStyle').value = 'italic'; })();
-=======
+            await waitForImages(el, 3000);
             const opt = {
-                margin: 0,
+                margin: [8, 8, 8, 8],
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
             const filename = 'OnTheWalk-Invoice.pdf';
-
-            // Preferred: force a file download (no new tab)
-            html2pdf().from(el).set(opt).toPdf().get('pdf').then(pdf => {
-                pdf.save(filename);
-            }).catch(() => {
-                // Fallback: manual blob download (also avoids opening a new tab)
-                html2pdf().from(el).set(opt).outputPdf('blob').then(blob => {
+            try {
+                await html2pdf().from(el).set(opt).save(filename);
+            } catch (e) {
+                try {
+                    const blob = await html2pdf().from(el).set(opt).outputPdf('blob');
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
@@ -721,9 +672,28 @@
                     a.click();
                     a.remove();
                     setTimeout(() => URL.revokeObjectURL(url), 500);
-                });
-            });
+                } catch (err) {
+                    console.error('PDF generation failed', err);
+                    alert('Failed to generate PDF. Try Preview then Download.');
+                }
+            }
         }
+
+        // Defaults on first load
+        (function initDefaults() {
+            const t = new Date();
+            const yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0');
+            const iso = `${yyyy}-${mm}-${dd}`;
+            const inv = document.getElementById('invoiceDate');
+            if (inv && !inv.value) inv.value = iso;
+            const ci = document.getElementById('checkIn');
+            if (ci && !ci.value) ci.value = iso;
+            const co = document.getElementById('checkOut');
+            if (co && !co.value) co.value = iso;
+            document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
+            document.getElementById('vatOption').value = 'included';
+            document.getElementById('notesStyle').value = 'italic';
+        })();
 
 
         // Netlify Function Configuration
@@ -822,11 +792,7 @@
             document.getElementById('vatOption').value = 'included';
             document.getElementById('notesStyle').value = 'italic';
             document.getElementById('vatNumber').value = '458030991';
-
-            // Initialize EmailJS
-            initEmailJS();
         })();
->>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
     </script>
 </body>
 

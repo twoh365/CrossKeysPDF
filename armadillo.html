@@ -577,7 +577,8 @@
 
             <div class="footer" id="outFooter"></div>
 
-            <div id="outVATNumber" class="small" style="display:none; margin-top:8mm; text-align:center; color: #666;">
+            <div class="small" style="margin-top:8mm; text-align:center; color: #666;">
+                We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. 458030991
             </div>
         </div>
     </div>
@@ -628,6 +629,27 @@
             const arr = Array(count).fill(base);
             for (let i = 0; i < remainder; i++) arr[i] += 1;
             return arr.map(c => c / 100);
+        }
+
+        /* Wait for images to load */
+        function waitForImages(root, timeoutMs = 3000) {
+            const imgs = Array.from((root || document).querySelectorAll('img'));
+            if (!imgs.length) return Promise.resolve();
+            return new Promise(resolve => {
+                let remaining = imgs.length;
+                const done = () => { if (--remaining <= 0) resolve(); };
+                imgs.forEach(img => {
+                    if (img.complete && img.naturalWidth !== 0) return done();
+                    const onEnd = () => {
+                        img.removeEventListener('load', onEnd);
+                        img.removeEventListener('error', onEnd);
+                        done();
+                    };
+                    img.addEventListener('load', onEnd);
+                    img.addEventListener('error', onEnd);
+                });
+                setTimeout(resolve, timeoutMs);
+            });
         }
 
         /* Controls helpers */
@@ -780,35 +802,26 @@
         }
 
         function previewInvoice() { compute(); document.getElementById('invoice').style.display = 'block'; document.getElementById('invoice').scrollIntoView({ behavior: 'smooth' }); }
-        function generateInvoice() {
+        async function generateInvoice() {
             compute();
             const el = document.getElementById('invoice');
             el.style.display = 'block';
+            await waitForImages(el, 3000);
 
             const opt = {
-                margin: 0,
+                margin: [8, 8, 8, 8],
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
             const filename = 'ArmadilloGuestHouse-Invoice.pdf';
 
-<<<<<<< HEAD
             try {
-                // Attempt normal save (use save() which is more robust in some environments)
                 await html2pdf().from(el).set(opt).save(filename);
             } catch (e) {
-                // Fallback: manual blob download
                 try {
                     const blob = await html2pdf().from(el).set(opt).outputPdf('blob');
-=======
-            // Preferred: force a file download (no new tab)
-            html2pdf().from(el).set(opt).toPdf().get('pdf').then(pdf => {
-                pdf.save(filename);
-            }).catch(() => {
-                // Fallback: manual blob download (also avoids opening a new tab)
-                html2pdf().from(el).set(opt).outputPdf('blob').then(blob => {
->>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
@@ -817,8 +830,11 @@
                     a.click();
                     a.remove();
                     setTimeout(() => URL.revokeObjectURL(url), 500);
-                });
-            });
+                } catch (err) {
+                    console.error('PDF generation failed', err);
+                    alert('Failed to generate PDF. Try Preview then Download.');
+                }
+            }
         }
 
 
