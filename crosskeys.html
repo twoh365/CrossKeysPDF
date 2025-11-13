@@ -759,6 +759,40 @@
       }
     }
 
+<<<<<<< HEAD
+    async function generateInvoice() {
+      previewInvoice();
+      const el = document.getElementById('invoice');
+      el.style.display = 'block';
+      await waitForImages(el, 3000);
+      const opt = {
+        margin: [8, 8, 8, 8],
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
+      };
+      const filename = 'Crosskeys-Invoice.pdf';
+      try {
+        // Use save() which is commonly more robust across environments
+        await html2pdf().from(el).set(opt).save(filename);
+      } catch (e) {
+        try {
+          const blob = await html2pdf().from(el).set(opt).outputPdf('blob');
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 500);
+        } catch (err) {
+          console.error('PDF generation failed', err);
+          alert('Failed to generate PDF. Try Preview then Download.');
+        }
+      }
+=======
     function previewInvoice() { compute(); document.getElementById('invoice').style.display = 'block'; document.getElementById('invoice').scrollIntoView({ behavior: 'smooth' }); }
     function generateInvoice() {
       compute();
@@ -789,6 +823,7 @@
           setTimeout(() => URL.revokeObjectURL(url), 500);
         });
       });
+>>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
     }
 
 

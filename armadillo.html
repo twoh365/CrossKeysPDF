@@ -481,8 +481,13 @@
         <div id="invoice" role="document" aria-label="Invoice preview" style="display:none;">
             <div class="header">
                 <div class="logo-container">
-                    <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/armadillo-logo.png"
-                        alt="Armadillo Guest House Logo" class="logo">
+                    <img id="logoImg"
+                        src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/armadillo-logo.png"
+                        alt="Armadillo Guest House Logo" class="logo" crossorigin="anonymous"
+                        onerror="this.style.display='none';document.getElementById('logoText').style.display='block'">
+                    <div id="logoText"
+                        style="display:none;font-family:Georgia,serif;font-weight:800;letter-spacing:.06em">ARMADILLO
+                        GUEST HOUSE</div>
                 </div>
                 <div class="brandline" style="margin-top:6px;">
                     <div class="prop">12 Gilmore Pl, Edinburgh EH3 9NQ, Scotland</div>
@@ -788,12 +793,22 @@
             };
             const filename = 'ArmadilloGuestHouse-Invoice.pdf';
 
+<<<<<<< HEAD
+            try {
+                // Attempt normal save (use save() which is more robust in some environments)
+                await html2pdf().from(el).set(opt).save(filename);
+            } catch (e) {
+                // Fallback: manual blob download
+                try {
+                    const blob = await html2pdf().from(el).set(opt).outputPdf('blob');
+=======
             // Preferred: force a file download (no new tab)
             html2pdf().from(el).set(opt).toPdf().get('pdf').then(pdf => {
                 pdf.save(filename);
             }).catch(() => {
                 // Fallback: manual blob download (also avoids opening a new tab)
                 html2pdf().from(el).set(opt).outputPdf('blob').then(blob => {
+>>>>>>> ad0b48bc5d381e3f3d8ac3ee9583c80ce2245060
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
