@@ -14,7 +14,6 @@
             --ink-muted: #555;
             --panel: #fffdfa;
             --watermark: #1a1a1a;
-            /* base ink for watermark; we'll fade it heavily */
         }
 
         * {
@@ -123,9 +122,7 @@
             letter-spacing: .02em;
             color: var(--watermark);
             opacity: .03;
-            /* feather-light */
             transform: translateY(10mm);
-            /* sit a touch lower than center */
             pointer-events: none;
             user-select: none;
         }
@@ -329,18 +326,14 @@
     <div id="app">
         <div class="card controls no-print">
             <h1 style="margin:0 0 6px 0;">Armadillo Guest House -- Invoice Maker</h1>
-            <div class="muted">Flat rate (rate or total) or custom nightly rates. VAT modes. Payment method. Full A4
-                cream export.</div>
+            <div class="muted">Flat rate (rate or total) or custom nightly rates. VAT modes. Payment method. Full A4 cream export.</div>
 
             <div class="row" style="margin-top:12px;">
                 <div>
                     <label>Guest Name</label>
                     <input type="text" id="guestName" placeholder="Guest full name" />
                 </div>
-                <div>
-                    <label>Guest Email</label>
-                    <input type="email" id="guestEmail" placeholder="guest@example.com" />
-                </div>
+                <div></div>
             </div>
 
             <div class="row">
@@ -377,7 +370,6 @@
                 </div>
                 <div>
                     <label>VAT Option</label>
-                    <!-- Default to Included -->
                     <select id="vatOption">
                         <option value="off">VAT Off</option>
                         <option value="excluded">VAT Excluded (add 20%)</option>
@@ -416,8 +408,7 @@
                 </table>
                 <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
                     <button class="btn" type="button" onclick="addNightRow()">Add Night</button>
-                    <button class="btn" type="button" onclick="populateNightsFromRange()">Populate nights from date
-                        range</button>
+                    <button class="btn" type="button" onclick="populateNightsFromRange()">Populate nights from date range</button>
                     <button class="btn danger" type="button" onclick="clearNights()">Clear nights</button>
                 </div>
                 <div class="muted" style="margin-top:6px;">
@@ -433,7 +424,6 @@
                 </div>
                 <div>
                     <label>Payment Method</label>
-                    <!-- Default to Booking.com. option -->
                     <select id="paymentMethod">
                         <option>Bank Transfer</option>
                         <option>Cheque</option>
@@ -458,21 +448,12 @@
                 </div>
             </div>
 
-            <div class="row" style="margin-top:12px;">
-                <div>
-                    <label>VAT Number (optional)</label>
-                    <input type="text" id="vatNumber" placeholder="e.g. GB123456789" />
-                </div>
-                <div></div>
-            </div>
-
             <label style="margin-top:8px;">Footer Text</label>
             <textarea id="footerText" rows="3">Thank you for choosing Armadillo Guest House.
-      For enquiries, please contact us via your reservation on Booking.com.  </textarea>
+      For enquiries, please contact us via your reservation on Booking.com.</textarea>
 
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn primary" type="button" onclick="generateInvoice()">Download PDF</button>
-                <button class="btn primary" type="button" onclick="emailInvoice()">Email Invoice</button>
                 <button class="btn" type="button" onclick="previewInvoice()">Preview on Page</button>
             </div>
         </div>
@@ -481,13 +462,8 @@
         <div id="invoice" role="document" aria-label="Invoice preview" style="display:none;">
             <div class="header">
                 <div class="logo-container">
-                    <img id="logoImg"
-                        src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/armadillo-logo.png"
-                        alt="Armadillo Guest House Logo" class="logo" crossorigin="anonymous"
-                        onerror="this.style.display='none';document.getElementById('logoText').style.display='block'">
-                    <div id="logoText"
-                        style="display:none;font-family:Georgia,serif;font-weight:800;letter-spacing:.06em">ARMADILLO
-                        GUEST HOUSE</div>
+                    <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/armadillo-logo.png"
+                        alt="Armadillo Guest House Logo" class="logo" crossorigin="anonymous" onerror="this.style.display='none'">
                 </div>
                 <div class="brandline" style="margin-top:6px;">
                     <div class="prop">12 Gilmore Pl, Edinburgh EH3 9NQ, Scotland</div>
@@ -592,7 +568,6 @@
         function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return s[(v - 20) % 10] || s[v] || s[0]; }
         function formatDatePretty(iso) {
             if (!iso) return "";
-            // Parse as local date to avoid timezone issues
             const [year, month, day] = iso.split('-').map(Number);
             const d = new Date(year, month - 1, day);
             return `${d.getDate()}${ordinal(d.getDate())} of ${d.toLocaleString('en-GB', { month: 'long' })} ${d.getFullYear()}`;
@@ -606,13 +581,11 @@
         function listNights(startISO, endISO) {
             const out = [];
             if (!startISO || !endISO) return out;
-            // Parse as local dates
             const [sy, sm, sd] = startISO.split('-').map(Number);
             const [ey, em, ed] = endISO.split('-').map(Number);
             let d = new Date(sy, sm - 1, sd);
             const end = new Date(ey, em - 1, ed);
             while (d < end) {
-                // Format as yyyy-mm-dd
                 const yyyy = d.getFullYear();
                 const mm = String(d.getMonth() + 1).padStart(2, '0');
                 const dd = String(d.getDate()).padStart(2, '0');
@@ -631,7 +604,7 @@
             return arr.map(c => c / 100);
         }
 
-        /* Wait for images to load */
+        /* Wait for images */
         function waitForImages(root, timeoutMs = 3000) {
             const imgs = Array.from((root || document).querySelectorAll('img'));
             if (!imgs.length) return Promise.resolve();
@@ -690,10 +663,7 @@
         });
         window.addEventListener('load', () => {
             toggleRateMode();
-            // Ensure defaults (already set in markup) are reflected in preview outputs on first render
-            // Set Payment Method default explicitly in case browsers ignore the 'selected' attribute
             document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
-            // Same for VAT Included
             document.getElementById('vatOption').value = 'included';
         });
 
@@ -712,7 +682,6 @@
             const notesStyle = document.getElementById('notesStyle').value;
             const flatInputMode = document.getElementById('flatInputMode').value;
             const rateOrTotal = parseFloat(document.getElementById('rateOrTotal').value || "0");
-            const vatNumber = document.getElementById('vatNumber').value.trim();
 
             const nightDates = listNights(checkIn, checkOut);
             const n = nightDates.length || (checkIn && checkOut ? 1 : 0);
@@ -739,15 +708,6 @@
             }
 
             document.getElementById('outFooter').innerText = footer;
-
-            // VAT Number display with company details
-            const vatNumberEl = document.getElementById('outVATNumber');
-            if (vatNumber) {
-                vatNumberEl.innerHTML = `We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. ${vatNumber}`;
-                vatNumberEl.style.display = 'block';
-            } else {
-                vatNumberEl.style.display = 'none';
-            }
 
             // Reset VAT UI
             document.getElementById('vatRow').style.display = 'none';
@@ -802,12 +762,12 @@
         }
 
         function previewInvoice() { compute(); document.getElementById('invoice').style.display = 'block'; document.getElementById('invoice').scrollIntoView({ behavior: 'smooth' }); }
+        
         async function generateInvoice() {
             compute();
             const el = document.getElementById('invoice');
             el.style.display = 'block';
             await waitForImages(el, 3000);
-
             const opt = {
                 margin: [8, 8, 8, 8],
                 image: { type: 'jpeg', quality: 0.98 },
@@ -816,7 +776,6 @@
                 pagebreak: { mode: ['css', 'legacy'] }
             };
             const filename = 'ArmadilloGuestHouse-Invoice.pdf';
-
             try {
                 await html2pdf().from(el).set(opt).save(filename);
             } catch (e) {
@@ -837,106 +796,15 @@
             }
         }
 
-
-        // Netlify Function Configuration
-        // This will work automatically when deployed to Netlify
-        const NETLIFY_FUNCTION_URL = '/.netlify/functions/send-invoice';
-
-        // Email Invoice Function using Netlify Function + Nodemailer
-        async function emailInvoice() {
-            const guestEmail = document.getElementById('guestEmail').value.trim();
-            const guestName = document.getElementById('guestName').value.trim();
-
-            if (!guestEmail) {
-                alert('Please enter the guest email address.');
-                return;
-            }
-
-            if (!guestName) {
-                alert('Please enter the guest name.');
-                return;
-            }
-
-            try {
-                // Show loading state
-                const emailBtn = event.target;
-                const originalText = emailBtn.innerText;
-                emailBtn.innerText = 'Sending...';
-                emailBtn.disabled = true;
-
-                // Generate PDF as blob
-                compute();
-                const el = document.getElementById('invoice');
-                el.style.display = 'block';
-
-                const opt = {
-                    margin: 0,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-
-                // Generate PDF blob and convert to base64
-                const pdfBlob = await html2pdf().from(el).set(opt).outputPdf('blob');
-
-                // Convert blob to base64
-                const base64Data = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result.split(',')[1]);
-                    reader.readAsDataURL(pdfBlob);
-                });
-
-                // Send to Netlify Function
-                const response = await fetch(NETLIFY_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        guestEmail: guestEmail,
-                        guestName: guestName,
-                        propertyName: 'Armadillo Guest House',
-                        pdfBase64: base64Data,
-                        fileName: 'ArmadilloGuestHouse-Invoice.pdf'
-                    })
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    alert(`Invoice successfully sent to ${guestEmail}!`);
-                } else {
-                    throw new Error(result.error || result.details || 'Failed to send email');
-                }
-
-            } catch (error) {
-                console.error('Email sending failed:', error);
-                alert('Failed to send email. Please try again or download the PDF instead.');
-            } finally {
-                // Reset button state
-                const emailBtn = document.querySelector('button[onclick="emailInvoice()"]');
-                if (emailBtn) {
-                    emailBtn.innerText = originalText;
-                    emailBtn.disabled = false;
-                }
-            }
-        }
-
         // Defaults on first load
         (function initDefaults() {
             const t = new Date();
             const yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0');
             const iso = `${yyyy}-${mm}-${dd}`;
             const inv = document.getElementById('invoiceDate'); if (inv && !inv.value) inv.value = iso;
-
-            // Force defaults (in case browser ignores selected)
             document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
             document.getElementById('vatOption').value = 'included';
             document.getElementById('notesStyle').value = 'italic';
-            document.getElementById('vatNumber').value = '458030991';
-
-            // Initialize EmailJS
-            initEmailJS();
         })();
     </script>
 </body>
