@@ -457,10 +457,15 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
         <div id="invoice" role="document" aria-label="Invoice preview" style="display:none;">
             <div class="header">
                 <div class="logo-container">
-                    <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/crosskeys-logo.png"
-                        alt="Crosskeys Logo" class="logo" crossorigin="anonymous" onerror="this.style.display='none'">
+                    <img id="logoImg"
+                        src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/crosskeys-logo.png"
+                        alt="Crosskeys Logo" class="logo" crossorigin="anonymous"
+                        onerror="this.style.display='none';document.getElementById('logoText').style.display='block'">
+                    <div id="logoText"
+                        style="display:none;font-family:Georgia,serif;font-weight:800;letter-spacing:.06em">CROSSKEYS
+                    </div>
                 </div>
-                <div class="brandline" style="margin-top:4px;">
+                <div class="brandline" style="margin-top:6px;">
                     <div class="prop">43 Lanark Road, Edinburgh EH14 1TL, Scotland</div>
                 </div>
             </div>
@@ -503,7 +508,7 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
                         </tr>
                         <tr>
                             <td colspan="2" class="right" style="font-weight:700;">Total Due</td>
-                            <td class="right total amount"><span id="outTotal"></span></td>
+                            <td class="right" style="font-weight:700;font-size:13px;"><span id="outTotal"></span></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -524,7 +529,7 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
                     <tfoot>
                         <tr>
                             <td colspan="2" class="right" style="font-weight:700;">Subtotal</td>
-                            <td class="right amount"><span id="outSubtotalCustom"></span></td>
+                            <td class="right" style="font-weight:700;"><span id="outSubtotalCustom"></span></td>
                         </tr>
                         <tr id="vatRowCustom" style="display:none;">
                             <td colspan="2" class="right">VAT (20%)</td>
@@ -532,261 +537,426 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
                         </tr>
                         <tr>
                             <td colspan="2" class="right" style="font-weight:700;">Total Due</td>
-                            <td class="right total amount"><span id="outTotalCustom"></span></td>
+                            <td class="right" style="font-weight:700;font-size:13px;"><span id="outTotalCustom"></span></td>
                         </tr>
                     </tfoot>
                 </table>
                 <div id="vatNoteCustom" class="note" style="display:none;">VAT of 20% is included in the rate.</div>
             </div>
 
-            <div style="margin-top:4mm;" class="small">
-                <span class="prop">Payment Method:</span> <span id="outPaymentMethod"></span>
+            <div style="margin-top:8mm;" class="small">
+                <span class="prop">Payment Method:</span>
+                <span id="outPaymentMethod"></span>
             </div>
+
             <div style="margin-top:2mm;" class="small" id="outPaymentNotesWrapper" hidden>
-                <span class="prop">Notes:</span> <span id="outPaymentNotes"></span>
+                <span class="prop">Notes:</span>
+                <span id="outPaymentNotes"></span>
             </div>
 
             <div class="footer" id="outFooter"></div>
 
-            <div class="small" style="margin-top:4mm; text-align:center; color: #666;">
+            <div class="small" style="margin-top:8mm; text-align:center; color: #666;">
                 We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. 458030991
             </div>
         </div>
     </div>
 
     <script>
-        const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        /* Currency (GBP) */
+        const gbp = new Intl.NumberFormat('en-GB', {
+            style: 'currency', currency: 'GBP', minimumFractionDigits: 2, maximumFractionDigits: 2
+        });
         const fmtGBP = n => gbp.format((+n) || 0);
 
-        function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return s[(v - 20) % 10] || s[v] || s[0]; }
+        /* Date helpers */
+        function ordinal(n) {
+            const s = ["th", "st", "nd", "rd"], v = n % 100;
+            return s[(v - 20) % 10] || s[v] || s[0];
+        }
+
         function formatDatePretty(iso) {
             if (!iso) return "";
             const [year, month, day] = iso.split('-').map(Number);
             const d = new Date(year, month - 1, day);
-            return `${d.getDate()}${ordinal(d.getDate())} of ${d.toLocaleString('en-GB', { month: 'long' })} ${d.getFullYear()}`;
+            return `${d.getDate()}${ordinal(d.getDate())} of ${d.toLocaleString('en-GB', { month: 'long', year: 'numeric' })}`;
         }
+
         function formatDateUK(iso) {
             if (!iso) return "";
             const [year, month, day] = iso.split('-').map(Number);
             const d = new Date(year, month - 1, day);
-            return d.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            return d.toLocaleDateString('en-GB');
         }
+
         function listNights(startISO, endISO) {
-            const out = [];
-            if (!startISO || !endISO) return out;
+            if (!startISO || !endISO) return [];
             const [sy, sm, sd] = startISO.split('-').map(Number);
             const [ey, em, ed] = endISO.split('-').map(Number);
-            let d = new Date(sy, sm - 1, sd);
+            const start = new Date(sy, sm - 1, sd);
             const end = new Date(ey, em - 1, ed);
-            while (d < end) {
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                out.push(`${yyyy}-${mm}-${dd}`);
-                d.setDate(d.getDate() + 1);
+            const nights = [];
+            let current = new Date(start);
+            while (current < end) {
+                const y = current.getFullYear();
+                const m = String(current.getMonth() + 1).padStart(2, '0');
+                const d = String(current.getDate()).padStart(2, '0');
+                nights.push(`${y}-${m}-${d}`);
+                current.setDate(current.getDate() + 1);
             }
-            return out;
+            return nights;
         }
-        function splitEvenly(total, n) {
-            const count = Math.max(1, n | 0);
-            const cents = Math.round((+total || 0) * 100);
-            const base = Math.floor(cents / count);
-            const remainder = cents - base * count;
-            const arr = Array(count).fill(base);
-            for (let i = 0; i < remainder; i++) arr[i] += 1;
-            return arr.map(c => c / 100);
+
+        function splitEvenly(total, count) {
+            if (count <= 0) return [];
+            const perNight = Math.floor(total * 100 / count) / 100;
+            const remainder = Math.round((total * 100) - (perNight * 100 * count)) / 100;
+            const amounts = Array(count).fill(perNight);
+            if (remainder !== 0) amounts[amounts.length - 1] += remainder;
+            return amounts;
         }
 
         function waitForImages(root, timeoutMs = 3000) {
-            const imgs = Array.from((root || document).querySelectorAll('img'));
-            if (!imgs.length) return Promise.resolve();
             return new Promise(resolve => {
-                let remaining = imgs.length;
-                const done = () => { if (--remaining <= 0) resolve(); };
+                const imgs = root.querySelectorAll('img');
+                let loaded = 0, errors = 0;
+                const total = imgs.length;
+                if (total === 0) { resolve(); return; }
+                const onComplete = () => { if (loaded + errors >= total) resolve(); };
+                const timer = setTimeout(resolve, timeoutMs);
                 imgs.forEach(img => {
-                    if (img.complete && img.naturalWidth !== 0) return done();
-                    const onEnd = () => {
-                        img.removeEventListener('load', onEnd);
-                        img.removeEventListener('error', onEnd);
-                        done();
-                    };
-                    img.addEventListener('load', onEnd);
-                    img.addEventListener('error', onEnd);
+                    const onLoad = () => { loaded++; onComplete(); clearTimeout(timer); };
+                    const onError = () => { errors++; onComplete(); clearTimeout(timer); };
+                    if (img.complete) { loaded++; } else {
+                        img.addEventListener('load', onLoad, { once: true });
+                        img.addEventListener('error', onError, { once: true });
+                    }
                 });
-                setTimeout(resolve, timeoutMs);
+                onComplete();
             });
         }
 
-        function addNightRow(date = "", rate = "") {
+        /* Initialize date inputs */
+        const today = new Date();
+        const todayISO = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        document.getElementById('checkIn').value = todayISO;
+        document.getElementById('checkOut').value = todayISO;
+        document.getElementById('invoiceDate').value = todayISO;
+
+        /* Rate mode toggle */
+        document.getElementById('rateMode').addEventListener('change', e => {
+            const isFlat = e.target.value === 'flat';
+            document.getElementById('flatRateBlock').style.display = isFlat ? 'grid' : 'none';
+            document.getElementById('customRateBlock').style.display = isFlat ? 'none' : 'block';
+        });
+
+        /* Flat input mode toggle label */
+        document.getElementById('flatInputMode').addEventListener('change', e => {
+            const label = document.getElementById('flatLabel');
+            label.textContent = e.target.value === 'rate' ? 'Rate per Night (£)' : 'Total for Stay (£)';
+        });
+
+        /* Night row builder */
+        function addNightRow(date = '', rate = '') {
             const tbody = document.getElementById('nightsTbody');
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td><input type="date" class="night-date" value="${date}"/></td><td><input type="number" class="night-rate" step="0.01" placeholder="0.00" value="${rate}"/></td><td class="right"><button type="button" class="btn" onclick="this.closest('tr').remove()">Remove</button></td>`;
+            tr.innerHTML = `
+                <td><input type="date" class="night-date" value="${date}" style="width:100%;padding:4px;border:1px solid #ccc;border-radius:4px;" /></td>
+                <td><input type="number" class="night-rate" value="${rate}" step="0.01" placeholder="0.00" style="width:100%;padding:4px;border:1px solid #ccc;border-radius:4px;" /></td>
+                <td><button class="btn" type="button" onclick="this.parentElement.parentElement.remove()" style="padding:4px 8px;font-size:0.9em;">Delete</button></td>
+            `;
             tbody.appendChild(tr);
         }
-        function clearNights() { document.getElementById('nightsTbody').innerHTML = ""; }
-        function populateNightsFromRange() {
-            const checkIn = document.getElementById('checkIn').value;
-            const checkOut = document.getElementById('checkOut').value;
-            const nights = listNights(checkIn, checkOut);
-            if (nights.length === 0) return;
-            clearNights();
-            const flatMode = document.getElementById('flatInputMode').value;
-            const val = parseFloat(document.getElementById('rateOrTotal').value || "0");
-            let amounts = [];
-            if (flatMode === 'rate') { amounts = Array(nights.length).fill(val); }
-            else { amounts = splitEvenly(val, nights.length); }
-            nights.forEach((iso, idx) => addNightRow(iso, amounts[idx].toFixed(2)));
-        }
-        function toggleRateMode() {
-            const mode = document.getElementById('rateMode').value;
-            document.getElementById('flatRateBlock').style.display = (mode === 'flat') ? 'grid' : 'none';
-            document.getElementById('customRateBlock').style.display = (mode === 'custom') ? 'block' : 'none';
-            document.getElementById('flatChargesBlock').style.display = (mode === 'flat') ? 'block' : 'none';
-            document.getElementById('customChargesBlock').style.display = (mode === 'custom') ? 'block' : 'none';
-            if (mode === 'custom' && document.querySelectorAll('#nightsTbody tr').length === 0) addNightRow();
-        }
-        document.getElementById('rateMode').addEventListener('change', toggleRateMode);
-        document.getElementById('flatInputMode').addEventListener('change', () => {
-            const mode = document.getElementById('flatInputMode').value;
-            document.getElementById('flatLabel').innerText = (mode === 'rate' ? 'Rate per Night (£)' : 'Total for Stay (£)');
-        });
-        window.addEventListener('load', () => {
-            toggleRateMode();
-            document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
-            document.getElementById('vatOption').value = 'included';
-        });
 
-        function compute() {
-            const guest = document.getElementById('guestName').value.trim();
+        function populateNightsFromRange() {
+            const start = document.getElementById('checkIn').value;
+            const end = document.getElementById('checkOut').value;
+            if (!start || !end) { alert('Set check-in and check-out dates'); return; }
+            const nights = listNights(start, end);
+            const tbody = document.getElementById('nightsTbody');
+            tbody.innerHTML = '';
+            const flatRate = document.getElementById('rateOrTotal').value;
+            const isRatePerNight = document.getElementById('flatInputMode').value === 'rate';
+            let amounts = [];
+            if (flatRate && !isRatePerNight) {
+                amounts = splitEvenly(+flatRate, nights.length);
+            }
+            nights.forEach((night, i) => {
+                const rate = isRatePerNight ? (flatRate || '') : (amounts[i] || '');
+                addNightRow(night, rate);
+            });
+        }
+
+        function clearNights() {
+            document.getElementById('nightsTbody').innerHTML = '';
+        }
+
+        /* Generate invoice */
+        async function generateInvoice() {
+            const guest = document.getElementById('guestName').value || 'Guest';
+            const room = document.getElementById('roomType').value;
             const checkIn = document.getElementById('checkIn').value;
             const checkOut = document.getElementById('checkOut').value;
-            const roomType = document.getElementById('roomType').value;
+            const rateMode = document.getElementById('rateMode').value;
             const vatOption = document.getElementById('vatOption').value;
-            const footer = document.getElementById('footerText').value;
-            const mode = document.getElementById('rateMode').value;
             const invoiceDate = document.getElementById('invoiceDate').value;
             const paymentMethod = document.getElementById('paymentMethod').value;
-            const paymentNotes = document.getElementById('paymentNotes').value.trim();
+            const paymentNotes = document.getElementById('paymentNotes').value;
             const notesStyle = document.getElementById('notesStyle').value;
-            const flatInputMode = document.getElementById('flatInputMode').value;
-            const rateOrTotal = parseFloat(document.getElementById('rateOrTotal').value || "0");
+            const footerText = document.getElementById('footerText').value;
 
-            const nightDates = listNights(checkIn, checkOut);
-            const n = nightDates.length || (checkIn && checkOut ? 1 : 0);
+            if (!checkIn || !checkOut) { alert('Set check-in and check-out dates'); return; }
 
-            document.getElementById('outGuest').innerText = guest;
-            document.getElementById('outRoom').innerText = roomType;
-            document.getElementById('outCheckIn').innerText = formatDateUK(checkIn);
-            document.getElementById('outCheckOut').innerText = formatDateUK(checkOut);
-            document.getElementById('outNights').innerText = nightDates.length || (checkIn && checkOut ? 1 : "");
-            document.getElementById('outInvoiceDate').innerText = formatDateUK(invoiceDate);
+            const nights = listNights(checkIn, checkOut);
+            if (nights.length === 0) { alert('Check-out must be after check-in'); return; }
 
-            document.getElementById('outPaymentMethod').innerText = paymentMethod;
-            const notesWrap = document.getElementById('outPaymentNotesWrapper');
-            const notesEl = document.getElementById('outPaymentNotes');
-            if (paymentNotes) {
-                notesWrap.hidden = false;
-                notesEl.innerText = paymentNotes;
-                notesEl.style.fontStyle = (notesStyle === 'italic' ? 'italic' : 'normal');
-                notesEl.style.color = (notesStyle === 'italic' ? 'var(--ink-muted)' : 'inherit');
-            } else {
-                notesWrap.hidden = true;
-            }
+            /* Populate invoice */
+            document.getElementById('outGuest').textContent = guest;
+            document.getElementById('outRoom').textContent = room;
+            document.getElementById('outInvoiceDate').textContent = formatDateUK(invoiceDate);
+            document.getElementById('outCheckIn').textContent = formatDateUK(checkIn);
+            document.getElementById('outCheckOut').textContent = formatDateUK(checkOut);
+            document.getElementById('outNights').textContent = nights.length;
 
-            document.getElementById('outFooter').innerText = footer;
+            let amounts = [];
+            if (rateMode === 'flat') {
+                const val = +document.getElementById('rateOrTotal').value || 0;
+                const isRate = document.getElementById('flatInputMode').value === 'rate';
+                amounts = isRate ? Array(nights.length).fill(val) : splitEvenly(val, nights.length);
 
-            document.getElementById('vatRow').style.display = 'none';
-            document.getElementById('vatNote').style.display = 'none';
-            document.getElementById('vatRowCustom').style.display = 'none';
-            document.getElementById('vatNoteCustom').style.display = 'none';
+                document.getElementById('flatChargesBlock').style.display = 'block';
+                document.getElementById('customChargesBlock').style.display = 'none';
 
-            if (mode === 'flat') {
-                const tbody = document.getElementById('outFlatNightRows');
-                tbody.innerHTML = "";
-                let amounts = [];
-                if (flatInputMode === 'rate') { amounts = Array(Math.max(1, n)).fill(rateOrTotal); }
-                else { amounts = splitEvenly(rateOrTotal, Math.max(1, n)); }
-                const datesToUse = nightDates.length ? nightDates : [checkIn || invoiceDate];
+                const flatRows = document.getElementById('outFlatNightRows');
+                flatRows.innerHTML = '';
                 let subtotal = 0;
-                datesToUse.forEach((iso, idx) => {
-                    const amt = amounts[idx] ?? amounts[amounts.length - 1] ?? 0;
+                nights.forEach((night, i) => {
+                    const amt = amounts[i] || 0;
                     subtotal += amt;
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>Accommodation</td><td>${formatDatePretty(iso)}</td><td class="right amount">${fmtGBP(amt)}</td>`;
-                    tbody.appendChild(tr);
+                    tr.innerHTML = `
+                        <td>Accommodation</td>
+                        <td>${formatDateUK(night)}</td>
+                        <td class="right amount">${fmtGBP(amt)}</td>
+                    `;
+                    flatRows.appendChild(tr);
                 });
-                let vat = 0, total = subtotal;
-                if (vatOption === 'excluded') { vat = subtotal * 0.20; total = subtotal + vat; document.getElementById('vatRow').style.display = 'table-row'; }
-                else if (vatOption === 'included') { document.getElementById('vatNote').style.display = 'block'; }
-                document.getElementById('outVAT').innerText = fmtGBP(vat);
-                document.getElementById('outTotal').innerText = fmtGBP(total);
+
+                let total = subtotal;
+                document.getElementById('vatRow').style.display = 'none';
+                document.getElementById('vatNote').style.display = 'none';
+
+                if (vatOption === 'excluded') {
+                    const vat = subtotal * 0.2;
+                    total = subtotal + vat;
+                    document.getElementById('outVAT').textContent = fmtGBP(vat);
+                    document.getElementById('vatRow').style.display = 'table-row';
+                    document.getElementById('vatNote').style.display = 'none';
+                } else if (vatOption === 'included') {
+                    document.getElementById('vatNote').style.display = 'block';
+                }
+
+                document.getElementById('outTotal').textContent = fmtGBP(total);
             } else {
-                const rows = [...document.querySelectorAll('#nightsTbody tr')];
-                if (rows.length === 0) addNightRow();
+                document.getElementById('flatChargesBlock').style.display = 'none';
+                document.getElementById('customChargesBlock').style.display = 'block';
+
+                const rows = document.getElementById('nightsTable').querySelectorAll('tbody tr');
+                const customRows = document.getElementById('outNightRows');
+                customRows.innerHTML = '';
+
                 let subtotal = 0;
-                const outBody = document.getElementById('outNightRows');
-                outBody.innerHTML = "";
                 rows.forEach(tr => {
-                    const d = tr.querySelector('.night-date').value;
-                    const r = parseFloat(tr.querySelector('.night-rate').value || "0");
-                    subtotal += r;
+                    const date = tr.querySelector('.night-date').value;
+                    const rate = +(tr.querySelector('.night-rate').value || 0);
+                    subtotal += rate;
                     const row = document.createElement('tr');
-                    row.innerHTML = `<td>Accommodation</td><td>${formatDatePretty(d)}</td><td class="right amount">${fmtGBP(r)}</td>`;
-                    outBody.appendChild(row);
+                    row.innerHTML = `
+                        <td>Accommodation</td>
+                        <td>${date ? formatDateUK(date) : ''}</td>
+                        <td class="right amount">${fmtGBP(rate)}</td>
+                    `;
+                    customRows.appendChild(row);
                 });
-                let vat = 0, total = subtotal;
-                if (vatOption === 'excluded') { vat = subtotal * 0.20; total = subtotal + vat; document.getElementById('vatRowCustom').style.display = 'table-row'; }
-                else if (vatOption === 'included') { document.getElementById('vatNoteCustom').style.display = 'block'; }
-                document.getElementById('outSubtotalCustom').innerText = fmtGBP(subtotal);
-                document.getElementById('outVATCustom').innerText = fmtGBP(vat);
-                document.getElementById('outTotalCustom').innerText = fmtGBP(total);
+
+                let total = subtotal;
+                document.getElementById('outSubtotalCustom').textContent = fmtGBP(subtotal);
+                document.getElementById('vatRowCustom').style.display = 'none';
+                document.getElementById('vatNoteCustom').style.display = 'none';
+
+                if (vatOption === 'excluded') {
+                    const vat = subtotal * 0.2;
+                    total = subtotal + vat;
+                    document.getElementById('outVATCustom').textContent = fmtGBP(vat);
+                    document.getElementById('vatRowCustom').style.display = 'table-row';
+                } else if (vatOption === 'included') {
+                    document.getElementById('vatNoteCustom').style.display = 'block';
+                }
+
+                document.getElementById('outTotalCustom').textContent = fmtGBP(total);
             }
-        }
 
-        function previewInvoice() { compute(); document.getElementById('invoice').style.display = 'block'; document.getElementById('invoice').scrollIntoView({ behavior: 'smooth' }); }
+            /* Payment & notes */
+            document.getElementById('outPaymentMethod').textContent = paymentMethod;
+            const notesWrapper = document.getElementById('outPaymentNotesWrapper');
+            if (paymentNotes) {
+                notesWrapper.hidden = false;
+                document.getElementById('outPaymentNotes').textContent = paymentNotes;
+                document.getElementById('outPaymentNotes').style.fontStyle = notesStyle === 'italic' ? 'italic' : 'normal';
+            } else {
+                notesWrapper.hidden = true;
+            }
 
-        async function generateInvoice() {
-            compute();
-            const el = document.getElementById('invoice');
-            el.style.display = 'block';
-            await waitForImages(el, 3000);
+            /* Footer */
+            document.getElementById('outFooter').textContent = footerText;
+            document.getElementById('outFooter').style.fontStyle = notesStyle === 'italic' ? 'italic' : 'normal';
+
+            /* Show invoice */
+            document.getElementById('invoice').style.display = 'block';
+            await waitForImages(document.getElementById('invoice'));
+
             const opt = {
                 margin: 0,
-                image: { type: 'jpeg', quality: 0.98 },
+                filename: 'Crosskeys-Invoice.pdf',
+                image: { type: 'png', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, allowTaint: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
                 pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' }
             };
-            const filename = 'Crosskeys-Invoice.pdf';
+
             try {
-                await html2pdf().from(el).set(opt).save(filename);
+                const pdf = html2pdf().set(opt).from(document.getElementById('invoice')).save();
             } catch (e) {
-                try {
-                    const blob = await html2pdf().from(el).set(opt).outputPdf('blob');
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    setTimeout(() => URL.revokeObjectURL(url), 500);
-                } catch (err) {
-                    console.error('PDF generation failed', err);
-                    alert('Failed to generate PDF. Try Preview then Download.');
-                }
+                console.error('PDF generation error:', e);
+                const canvas = await html2canvas(document.getElementById('invoice'), { scale: 2, useCORS: true, logging: false });
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'Crosskeys-Invoice.pdf';
+                link.click();
             }
+
+            document.getElementById('invoice').style.display = 'none';
         }
 
-        (function initDefaults() {
-            const t = new Date();
-            const yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0');
-            const iso = `${yyyy}-${mm}-${dd}`;
-            const inv = document.getElementById('invoiceDate');
-            if (inv && !inv.value) inv.value = iso;
-            document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
-            document.getElementById('vatOption').value = 'included';
-        })();
+        /* Preview invoice (without downloading) */
+        async function previewInvoice() {
+            const guest = document.getElementById('guestName').value || 'Guest';
+            const room = document.getElementById('roomType').value;
+            const checkIn = document.getElementById('checkIn').value;
+            const checkOut = document.getElementById('checkOut').value;
+            const rateMode = document.getElementById('rateMode').value;
+            const vatOption = document.getElementById('vatOption').value;
+            const invoiceDate = document.getElementById('invoiceDate').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const paymentNotes = document.getElementById('paymentNotes').value;
+            const notesStyle = document.getElementById('notesStyle').value;
+            const footerText = document.getElementById('footerText').value;
+
+            if (!checkIn || !checkOut) { alert('Set check-in and check-out dates'); return; }
+
+            const nights = listNights(checkIn, checkOut);
+            if (nights.length === 0) { alert('Check-out must be after check-in'); return; }
+
+            document.getElementById('outGuest').textContent = guest;
+            document.getElementById('outRoom').textContent = room;
+            document.getElementById('outInvoiceDate').textContent = formatDateUK(invoiceDate);
+            document.getElementById('outCheckIn').textContent = formatDateUK(checkIn);
+            document.getElementById('outCheckOut').textContent = formatDateUK(checkOut);
+            document.getElementById('outNights').textContent = nights.length;
+
+            let amounts = [];
+            if (rateMode === 'flat') {
+                const val = +document.getElementById('rateOrTotal').value || 0;
+                const isRate = document.getElementById('flatInputMode').value === 'rate';
+                amounts = isRate ? Array(nights.length).fill(val) : splitEvenly(val, nights.length);
+
+                document.getElementById('flatChargesBlock').style.display = 'block';
+                document.getElementById('customChargesBlock').style.display = 'none';
+
+                const flatRows = document.getElementById('outFlatNightRows');
+                flatRows.innerHTML = '';
+                let subtotal = 0;
+                nights.forEach((night, i) => {
+                    const amt = amounts[i] || 0;
+                    subtotal += amt;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>Accommodation</td>
+                        <td>${formatDateUK(night)}</td>
+                        <td class="right amount">${fmtGBP(amt)}</td>
+                    `;
+                    flatRows.appendChild(tr);
+                });
+
+                let total = subtotal;
+                document.getElementById('vatRow').style.display = 'none';
+                document.getElementById('vatNote').style.display = 'none';
+
+                if (vatOption === 'excluded') {
+                    const vat = subtotal * 0.2;
+                    total = subtotal + vat;
+                    document.getElementById('outVAT').textContent = fmtGBP(vat);
+                    document.getElementById('vatRow').style.display = 'table-row';
+                } else if (vatOption === 'included') {
+                    document.getElementById('vatNote').style.display = 'block';
+                }
+
+                document.getElementById('outTotal').textContent = fmtGBP(total);
+            } else {
+                document.getElementById('flatChargesBlock').style.display = 'none';
+                document.getElementById('customChargesBlock').style.display = 'block';
+
+                const rows = document.getElementById('nightsTable').querySelectorAll('tbody tr');
+                const customRows = document.getElementById('outNightRows');
+                customRows.innerHTML = '';
+
+                let subtotal = 0;
+                rows.forEach(tr => {
+                    const date = tr.querySelector('.night-date').value;
+                    const rate = +(tr.querySelector('.night-rate').value || 0);
+                    subtotal += rate;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>Accommodation</td>
+                        <td>${date ? formatDateUK(date) : ''}</td>
+                        <td class="right amount">${fmtGBP(rate)}</td>
+                    `;
+                    customRows.appendChild(row);
+                });
+
+                let total = subtotal;
+                document.getElementById('outSubtotalCustom').textContent = fmtGBP(subtotal);
+                document.getElementById('vatRowCustom').style.display = 'none';
+                document.getElementById('vatNoteCustom').style.display = 'none';
+
+                if (vatOption === 'excluded') {
+                    const vat = subtotal * 0.2;
+                    total = subtotal + vat;
+                    document.getElementById('outVATCustom').textContent = fmtGBP(vat);
+                    document.getElementById('vatRowCustom').style.display = 'table-row';
+                } else if (vatOption === 'included') {
+                    document.getElementById('vatNoteCustom').style.display = 'block';
+                }
+
+                document.getElementById('outTotalCustom').textContent = fmtGBP(total);
+            }
+
+            document.getElementById('outPaymentMethod').textContent = paymentMethod;
+            const notesWrapper = document.getElementById('outPaymentNotesWrapper');
+            if (paymentNotes) {
+                notesWrapper.hidden = false;
+                document.getElementById('outPaymentNotes').textContent = paymentNotes;
+                document.getElementById('outPaymentNotes').style.fontStyle = notesStyle === 'italic' ? 'italic' : 'normal';
+            } else {
+                notesWrapper.hidden = true;
+            }
+
+            document.getElementById('outFooter').textContent = footerText;
+            document.getElementById('outFooter').style.fontStyle = notesStyle === 'italic' ? 'italic' : 'normal';
+
+            document.getElementById('invoice').style.display = 'block';
+            document.getElementById('invoice').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     </script>
 </body>
 </html>
