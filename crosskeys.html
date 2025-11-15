@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Crosskeys - Invoice Maker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --cream: #f5f0e9;
+            --ink: #222;
+            --line: #c8c3bb;
+            --panel: #fffdfa;
+            --ink-muted: #555
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
+            margin: 0;
+            background: var(--cream);
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased
+        }
+
+        #app {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 18px
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 16px
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 6px
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: #fff;
+            cursor: pointer
+        }
+
+        .btn.primary {
+            background: var(--cream)
+        }
+
+        .muted {
+            color: var(--ink-muted);
+            font-size: .9em
+        }
+
+        /* A4 invoice */
+        #invoice {
+            width: 210mm;
+            height: 297mm;
+            background: var(--cream);
+            padding: 18mm 16mm;
+            border: 1px solid var(--line);
+            margin: 0 auto;
+            position: relative;
+            -webkit-print-color-adjust: exact
+        }
+
+        #invoice::before {
+            content: "CK";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Georgia, serif;
+            font-size: 120mm;
+            font-weight: 800;
+            color: #1a1a1a;
+            opacity: .03;
+            pointer-events: none
+        }
+
+        .header {
+            text-align: center
+        }
+
+        .logo-container {
+            position: relative
+        }
+
+        .logo {
+            max-width: 40mm;
+            height: auto
+        }
+
+        .details-box {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8mm
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+
+        .right {
+            text-align: right
+        }
+
+        .small {
+            font-size: .9em
+        }
+
+        .prop {
+            text-transform: uppercase;
+            font-size: 12px;
+            color: #444;
+            font-weight: 800
+        }
+
+        .val {
+            font-weight: 700;
+            margin-top: 4px
+        }
+
+        table.charges {
+            border-collapse: collapse;
+            width: 100%;
+            position: relative;
+            z-index: 1
+        }
+
+        table.charges th {
+            text-align: left;
+            text-transform: uppercase;
+            font-size: .9em;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 6px
+        }
+
+        table.charges td {
+            padding: 8px 6px
+        }
+
+        .amount {
+            font-variant-numeric: tabular-nums
+        }
+
+        .divider {
+            border-top: 1px solid var(--line);
+            margin: 10mm 0
+        }
+
+        .bold {
+            font-weight: 800
+        }
+
+        .total {
+            font-size: 1.1em
+        }
+
+        .note {
+            font-style: italic;
+            color: var(--ink-muted);
+            margin-top: 6px;
+            font-size: .9em
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            margin-top: 10mm;
+            padding-top: 6mm;
+            text-align: center;
+            color: var(--ink-muted)
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="card">
+            <h1 style="margin:0 0 8px 0">Crosskeys — Invoice Maker</h1>
+            <div class="muted">Flat or custom nightly rates. VAT modes. Preview then download PDF.</div>
+
+            <div class="row" style="margin-top:12px">
+                <div>
+                    <label>Guest Name</label>
+                    <input id="guestName" type="text" placeholder="Guest full name" />
+                </div>
+                <div></div>
+            </div>
+
+            <div class="row" style="margin-top:12px">
+                <div>
+                    <label>Room Type</label>
+                    <select id="roomType">
+                        <option>Double Room with Private Bathroom</option>
+                        <option>Family Room with Private Bathroom</option>
+                        <option>Single Room with Private Bathroom</option>
+                    </select>
+                </div>
+                <div></div>
+            </div>
+
+            <div class="row" style="margin-top:12px">
+                <div>
+                    <label>Check-In Date</label>
+                    <input id="checkIn" type="date" />
+                </div>
+                <div>
+                    <label>Check-Out Date</label>
+                    <input id="checkOut" type="date" />
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:12px">
+                <div>
+                    <label>Rate Mode</label>
+                    <select id="rateMode">
+                        <option value="flat">Flat Rate</option>
+                        <option value="custom">Custom Nightly Rates</option>
+                    </select>
+                </div>
+                <div>
+                    <label>VAT Option</label>
+                    <select id="vatOption">
+                        <option value="off">VAT Off</option>
+                        <option value="excluded">VAT Excluded (add 20%)</option>
+                        <option value="included" selected>VAT Included</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="flatRateBlock" class="row" style="margin-top:12px">
+                <div>
+                    <label>Flat Input Mode</label>
+                    <select id="flatInputMode">
+                        <option value="rate">Rate per Night</option>
+                        <option value="total">Total for Stay</option>
+                    </select>
+                </div>
+                <div>
+                    <label id="flatLabel">Rate per Night (£)</label>
+                    <input id="rateOrTotal" type="number" step="0.01" placeholder="0.00" />
+                </div>
+            </div>
+
+            <div id="customRateBlock" style="display:none;margin-top:12px">
+                <label>Nightly Charges</label>
+                <table id="nightsTable" class="builder" style="width:100%;border-collapse:collapse;margin-top:8px">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left">Date</th>
+                            <th style="text-align:left">Rate (£)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="nightsTbody"></tbody>
+                </table>
+                <div style="margin-top:8px;display:flex;gap:8px">
+                    <button class="btn" type="button" onclick="addNightRow()">Add Night</button>
+                    <button class="btn" type="button" onclick="populateNightsFromRange()">Populate nights from range</button>
+                    <button class="btn" type="button" onclick="clearNights()">Clear nights</button>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:12px">
+                <div>
+                    <label>Invoice Date</label>
+                    <input id="invoiceDate" type="date" />
+                </div>
+                <div>
+                    <label>Payment Method</label>
+                    <select id="paymentMethod">
+                        <option>Paid by Card Via Booking.com.</option>
+                        <option>Bank Transfer</option>
+                        <option>Cash</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:8px">
+                <button class="btn primary" type="button" onclick="generateInvoice()">Download PDF</button>
+                <button class="btn" type="button" onclick="previewInvoice()">Preview on Page</button>
+            </div>
+        </div>
+
+        <!-- Invoice preview -->
+        <div id="invoice" style="display:none" role="document" aria-label="Invoice">
+            <div class="header">
+                <div class="logo-container">
+                    <img id="logoImg" class="logo" src="images/crosskeys-logo.png" alt="Crosskeys Logo"
+                        onload="this.nextElementSibling.style.display='none'"
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                    <div id="logoText"
+                        style="display:block;font-family:Georgia,serif;font-weight:800;letter-spacing:.06em">CROSSKEYS
+                    </div>
+                </div>
+                <div style="margin-top:6px;font-weight:700">43 Lanark Road, Edinburgh EH14 1TL</div>
+            </div>
+
+            <h2 style="text-align:center">Invoice for Your Stay at Crosskeys</h2>
+
+            <div class="details-box">
+                <div class="two-col small">
+                    <div>
+                        <div class="prop">Guest Name</div>
+                        <div id="outGuest" class="val"></div>
+                        <div class="prop" style="margin-top:8px">Room Type</div>
+                        <div id="outRoom"></div>
+                    </div>
+                    <div class="right">
+                        <div><span class="prop">Invoice Date:</span> <span id="outInvoiceDate"></span></div>
+                        <div><span class="prop">Check-In:</span> <span id="outCheckIn"></span></div>
+                        <div><span class="prop">Check-Out:</span> <span id="outCheckOut"></span></div>
+                        <div><span class="prop">Nights:</span> <span id="outNights"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="flatChargesBlock" style="margin-top:8mm">
+                <table class="charges">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th class="right">Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="outFlatNightRows"></tbody>
+                    <tfoot>
+                        <tr id="vatRow" style="display:none">
+                            <td colspan="2" class="right">VAT (20%)</td>
+                            <td class="right amount" id="outVAT"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="right bold">Total Due</td>
+                            <td class="right bold total amount" id="outTotal"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div id="vatNote" class="note" style="display:none">VAT of 20% is included in the rate.</div>
+            </div>
+
+            <div id="customChargesBlock" style="margin-top:8mm;display:none">
+                <table class="charges">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th class="right">Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="outNightRows"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2" class="right bold">Subtotal</td>
+                            <td class="right bold amount" id="outSubtotal"></td>
+                        </tr>
+                        <tr id="vatRowCustom" style="display:none">
+                            <td colspan="2" class="right">VAT (20%)</td>
+                            <td class="right amount" id="outVATCustom"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="right bold">Total Due</td>
+                            <td class="right bold total amount" id="outTotalCustom"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div id="vatNoteCustom" class="note" style="display:none">VAT of 20% is included in the rate.</div>
+            </div>
+
+            <div class="footer">
+                We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. 458030991
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Currency (GBP) */
+        const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 2 });
+        const fmtGBP = n => gbp.format((+n) || 0);
+
+        /* Date helpers */
+        function ordinal(n) {
+            const s = ["th", "st", "nd", "rd"], v = n % 100;
+            return s[(v - 20) % 10] || s[v] || s[0];
+        }
+
+        function formatDatePretty(iso) {
+            if (!iso) return "";
+            const [y, m, d] = iso.split('-').map(Number);
+            const dt = new Date(y, m - 1, d);
+            return `${dt.getDate()}${ordinal(dt.getDate())} of ${dt.toLocaleString('en-GB', { month: 'long' })} ${dt.getFullYear()}`;
+        }
+
+        function formatDateUK(iso) {
+            if (!iso) return "";
+            const [y, m, d] = iso.split('-').map(Number);
+            return new Date(y, m - 1, d).toLocaleDateString('en-GB');
+        }
+
+        function listNights(startISO, endISO) {
+            const out = [];
+            if (!startISO || !endISO) return out;
+            let [sy, sm, sd] = startISO.split('-').map(Number);
+            let [ey, em, ed] = endISO.split('-').map(Number);
+            let d = new Date(sy, sm - 1, sd);
+            const end = new Date(ey, em - 1, ed);
+            while (d < end) {
+                const yyyy = d.getFullYear(), mm = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0');
+                out.push(`${yyyy}-${mm}-${dd}`);
+                d.setDate(d.getDate() + 1);
+            }
+            return out;
+        }
+
+        function splitEvenly(total, n) {
+            const count = Math.max(1, n | 0);
+            const cents = Math.round((+total || 0) * 100);
+            const base = Math.floor(cents / count);
+            const rem = cents - base * count;
+            const arr = Array(count).fill(base);
+            for (let i = 0; i < rem; i++) arr[i] += 1;
+            return arr.map(c => c / 100);
+        }
+
+        function waitForImages(root, timeoutMs = 3000) {
+            const imgs = Array.from((root || document).querySelectorAll('img'));
+            if (!imgs.length) return Promise.resolve();
+            return new Promise(resolve => {
+                let remaining = imgs.length;
+                const done = () => { if (--remaining <= 0) resolve(); };
+                imgs.forEach(img => {
+                    if (img.complete && img.naturalWidth !== 0) return done();
+                    const onEnd = () => { img.removeEventListener('load', onEnd); img.removeEventListener('error', onEnd); done(); };
+                    img.addEventListener('load', onEnd);
+                    img.addEventListener('error', onEnd);
+                });
+                setTimeout(resolve, timeoutMs);
+            });
+        }
+
+        function addNightRow(date = '', rate = '') {
+            const tbody = document.getElementById('nightsTbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="date" class="night-date" value="${date}"/></td><td><input class="night-rate" type="number" step="0.01" value="${rate}"/></td><td class="right"><button type="button" class="btn" onclick="this.closest('tr').remove()">Remove</button></td>`;
+            tbody.appendChild(tr);
+        }
+
+        function clearNights() { document.getElementById('nightsTbody').innerHTML = ''; }
+
+        function populateNightsFromRange() {
+            const checkIn = document.getElementById('checkIn').value;
+            const checkOut = document.getElementById('checkOut').value;
+            const nights = listNights(checkIn, checkOut);
+            if (!nights.length) return;
+            clearNights();
+            const flatMode = document.getElementById('flatInputMode').value;
+            const val = parseFloat(document.getElementById('rateOrTotal').value || '0');
+            let amounts = [];
+            if (flatMode === 'rate') amounts = Array(nights.length).fill(val);
+            else amounts = splitEvenly(val, nights.length);
+            nights.forEach((iso, idx) => addNightRow(iso, (amounts[idx] || 0).toFixed(2)));
+        }
+
+        function toggleRateMode() {
+            const mode = document.getElementById('rateMode').value;
+            document.getElementById('flatRateBlock').style.display = (mode === 'flat') ? 'grid' : 'none';
+            document.getElementById('customRateBlock').style.display = (mode === 'custom') ? 'block' : 'none';
+            document.getElementById('flatChargesBlock').style.display = (mode === 'flat') ? 'block' : 'none';
+            document.getElementById('customChargesBlock').style.display = (mode === 'custom') ? 'block' : 'none';
+            if (mode === 'custom' && document.querySelectorAll('#nightsTbody tr').length === 0) addNightRow();
+        }
+
+        document.getElementById('rateMode').addEventListener('change', toggleRateMode);
+        document.getElementById('flatInputMode').addEventListener('change', () => {
+            const mode = document.getElementById('flatInputMode').value;
+            document.getElementById('flatLabel').innerText = (mode === 'rate' ? 'Rate per Night (£)' : 'Total for Stay (£)');
+        });
+
+        function compute() {
+            const guest = document.getElementById('guestName').value.trim();
+            const checkIn = document.getElementById('checkIn').value;
+            const checkOut = document.getElementById('checkOut').value;
+            const room = document.getElementById('roomType').value;
+            const vatOption = document.getElementById('vatOption').value;
+            const invoiceDate = document.getElementById('invoiceDate').value;
+            const flatInputMode = document.getElementById('flatInputMode').value;
+            const rateOrTotal = parseFloat(document.getElementById('rateOrTotal').value || '0');
+            const nights = listNights(checkIn, checkOut);
+            const n = nights.length || ((checkIn && checkOut) ? 1 : 0);
+
+            document.getElementById('outGuest').innerText = guest;
+            document.getElementById('outRoom').innerText = room;
+            document.getElementById('outCheckIn').innerText = formatDateUK(checkIn);
+            document.getElementById('outCheckOut').innerText = formatDateUK(checkOut);
+            document.getElementById('outNights').innerText = nights.length || ((checkIn && checkOut) ? 1 : '');
+            document.getElementById('outInvoiceDate').innerText = formatDateUK(invoiceDate);
+
+            document.getElementById('vatRow').style.display = 'none';
+            document.getElementById('vatNote').style.display = 'none';
+            document.getElementById('vatRowCustom').style.display = 'none';
+            document.getElementById('vatNoteCustom').style.display = 'none';
+
+            if (document.getElementById('rateMode').value === 'flat') {
+                const tbody = document.getElementById('outFlatNightRows');
+                tbody.innerHTML = '';
+                let amounts = [];
+                if (flatInputMode === 'rate') amounts = Array(Math.max(1, n)).fill(rateOrTotal);
+                else amounts = splitEvenly(rateOrTotal, Math.max(1, n));
+                const dates = nights.length ? nights : [checkIn || invoiceDate];
+                let subtotal = 0;
+                dates.forEach((iso, idx) => {
+                    const amt = amounts[idx] || 0;
+                    subtotal += amt;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>Accommodation</td><td>${formatDatePretty(iso)}</td><td class="right amount">${fmtGBP(amt)}</td>`;
+                    tbody.appendChild(tr);
+                });
+                let vat = 0, total = subtotal;
+                if (vatOption === 'excluded') {
+                    vat = subtotal * 0.20;
+                    total = subtotal + vat;
+                    document.getElementById('vatRow').style.display = 'table-row';
+                } else if (vatOption === 'included') {
+                    document.getElementById('vatNote').style.display = 'block';
+                }
+                document.getElementById('outVAT').innerText = fmtGBP(vat);
+                document.getElementById('outTotal').innerText = fmtGBP(total);
+            } else {
+                // custom nightly
+                const rows = [...document.querySelectorAll('#nightsTbody tr')];
+                if (rows.length === 0) addNightRow();
+                const outBody = document.getElementById('outNightRows');
+                outBody.innerHTML = '';
+                let subtotal = 0;
+                rows.forEach(tr => {
+                    const d = tr.querySelector('.night-date').value;
+                    const r = parseFloat(tr.querySelector('.night-rate').value || '0');
+                    subtotal += r;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>Accommodation</td><td>${formatDatePretty(d)}</td><td class="right amount">${fmtGBP(r)}</td>`;
+                    outBody.appendChild(row);
+                });
+                let vat = 0, total = subtotal;
+                if (vatOption === 'excluded') {
+                    vat = subtotal * 0.20;
+                    total = subtotal + vat;
+                    document.getElementById('vatRowCustom').style.display = 'table-row';
+                } else if (vatOption === 'included') {
+                    document.getElementById('vatNoteCustom').style.display = 'block';
+                }
+                document.getElementById('outSubtotal').innerText = fmtGBP(subtotal);
+                document.getElementById('outVATCustom').innerText = fmtGBP(vat);
+                document.getElementById('outTotalCustom').innerText = fmtGBP(total);
+            }
+        }
+
+        function previewInvoice() {
+            compute();
+            const el = document.getElementById('invoice');
+            el.style.display = 'block';
+            el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function generateInvoice() {
+            compute();
+            const el = document.getElementById('invoice');
+            el.style.display = 'block';
+            await waitForImages(el, 3000);
+
+            // Small pause to let layout settle
+            await new Promise(r => setTimeout(r, 300));
+
+            const opt = {
+                margin: 0,
+                filename: 'Crosskeys-Invoice.pdf',
+                image: { type: 'png', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, allowTaint: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+                pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(el).save();
+            } catch (e) {
+                try {
+                    const blob = await html2pdf().set(opt).from(el).outputPdf('blob');
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = opt.filename || 'invoice.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 500);
+                } catch (err) {
+                    try {
+                        const canvas = await html2canvas(el, { scale: 2, useCORS: true, logging: false });
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        const imgProps = pdf.getImageProperties(imgData);
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                        pdf.save(opt.filename || 'invoice.pdf');
+                    } catch (fatal) {
+                        console.error('PDF generation failed', fatal);
+                        alert('Failed to generate PDF. Try Preview then Download.');
+                    }
+                }
+            }
+        }
+
+        // Defaults on load
+        (function () {
+            const t = new Date(), yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0');
+            const iso = `${yyyy}-${mm}-${dd}`;
+            const inv = document.getElementById('invoiceDate');
+            if (inv && !inv.value) inv.value = iso;
+            document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
+            document.getElementById('vatOption').value = 'included';
+            document.getElementById('flatInputMode').value = 'rate';
+            toggleRateMode();
+        })();
+    </script>
+</body>
+
+</html>
