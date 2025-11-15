@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -96,19 +95,19 @@
         /* A4 canvas */
         #invoice {
             width: 210mm;
-            min-height: 297mm;
+            height: 297mm;
             background: var(--cream);
             color: var(--ink);
             margin: 0 auto;
-            padding: 18mm 16mm;
+            padding: 16mm 14mm;
             border: 1px solid var(--line);
             position: relative;
             overflow: hidden;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            page-break-after: avoid;
         }
 
-        /* === Watermark (background monogram) === */
         #invoice::before {
             content: "OTW";
             position: absolute;
@@ -123,23 +122,6 @@
             color: var(--watermark);
             opacity: .03;
             transform: translateY(10mm);
-            pointer-events: none;
-            user-select: none;
-        }
-
-        /* Tiny footer crest */
-        #invoice::after {
-            content: "OTW";
-            position: absolute;
-            bottom: 8mm;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: 14mm;
-            font-weight: 800;
-            letter-spacing: .02em;
-            color: var(--watermark);
-            opacity: .04;
             pointer-events: none;
             user-select: none;
         }
@@ -160,7 +142,7 @@
         }
 
         .logo {
-            max-width: 55mm;
+            max-width: 50mm;
             height: auto;
             display: block;
             background: transparent;
@@ -169,9 +151,9 @@
 
         h2 {
             font-family: Georgia, "Times New Roman", serif;
-            font-size: 20pt;
+            font-size: 18pt;
             font-weight: 700;
-            margin: 10mm 0 6mm 0;
+            margin: 8mm 0 4mm 0;
             position: relative;
             z-index: 1;
         }
@@ -180,7 +162,7 @@
             border-top: 2px solid var(--line);
             border-bottom: 1px solid var(--line);
             height: 0;
-            margin: 8mm 0;
+            margin: 6mm 0;
             position: relative;
             z-index: 1;
         }
@@ -188,7 +170,7 @@
         .brandline .prop {
             text-transform: uppercase;
             letter-spacing: .06em;
-            font-size: 12px;
+            font-size: 11px;
             color: #444;
             font-weight: 700;
         }
@@ -197,8 +179,8 @@
             background: var(--panel);
             border: 1px solid var(--line);
             border-radius: 8px;
-            padding: 10px 12px;
-            margin-top: 6mm;
+            padding: 8px 10px;
+            margin-top: 4mm;
             position: relative;
             z-index: 1;
         }
@@ -206,7 +188,7 @@
         .two-col {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px
+            gap: 8px
         }
 
         .right {
@@ -215,14 +197,15 @@
 
         .prop {
             text-transform: uppercase;
-            letter-spacing: .06em;
-            font-size: 12px;
-            color: #444;
+            letter-spacing: .05em;
+            font-size: 10px;
+            color: #555;
             font-weight: 800;
         }
 
         .val {
-            font-weight: 700
+            font-weight: 600;
+            font-size: 13px;
         }
 
         table {
@@ -231,7 +214,7 @@
 
         td,
         th {
-            padding: 6px 10px;
+            padding: 4px 6px;
             vertical-align: top
         }
 
@@ -244,15 +227,17 @@
             width: 100%;
             position: relative;
             z-index: 1;
+            margin-top: 6mm;
         }
 
         table.charges th {
             text-align: left;
             text-transform: uppercase;
-            font-size: .9em;
-            letter-spacing: .05em;
+            font-size: 9px;
+            letter-spacing: .04em;
             border-bottom: 1px solid var(--line);
-            padding-bottom: 6px;
+            padding-bottom: 4px;
+            font-weight: 700;
         }
 
         table.charges td.right {
@@ -264,40 +249,50 @@
         }
 
         table.charges tbody tr td {
-            padding-top: 8px;
-            padding-bottom: 8px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            font-size: 12px;
         }
 
         tfoot tr:first-child td,
         tfoot tr:first-child th {
             border-top: 2px solid var(--line);
-            padding-top: 10px;
+            padding-top: 6px;
+        }
+
+        tfoot tr td {
+            padding-top: 4px;
+            padding-bottom: 4px;
+            font-size: 11px;
         }
 
         .total {
-            font-size: 1.24em;
+            font-size: 13px;
             letter-spacing: .015em;
+            font-weight: 700;
         }
 
         .note {
             font-style: italic;
             color: var(--ink-muted);
-            margin-top: 6px
+            margin-top: 4px;
+            font-size: 10px;
         }
 
         .footer {
             border-top: 1px solid var(--line);
-            margin-top: 10mm;
-            padding-top: 4mm;
+            margin-top: 6mm;
+            padding-top: 3mm;
             text-align: center;
-            font-size: .95em;
+            font-size: 9px;
             color: var(--ink-muted);
             position: relative;
             z-index: 1;
+            line-height: 1.4;
         }
 
         .small {
-            font-size: .95em
+            font-size: 11px
         }
 
         @media screen {
@@ -450,7 +445,7 @@
 
             <label style="margin-top:8px;">Footer Text</label>
             <textarea id="footerText" rows="3">Thank you for choosing On The Walk.
-      For enquiries, please contact us via your reservation on Booking.com.</textarea>
+For enquiries, please contact us via your reservation on Booking.com.</textarea>
 
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn primary" type="button" onclick="generateInvoice()">Download PDF</button>
@@ -465,7 +460,7 @@
                     <img src="https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/onthewalk-logo.png"
                         alt="On The Walk Logo" class="logo" crossorigin="anonymous" onerror="this.style.display='none'">
                 </div>
-                <div class="brandline" style="margin-top:6px;">
+                <div class="brandline" style="margin-top:4px;">
                     <div class="prop">18 Albert Pl, Edinburgh EH7 5HN, Scotland</div>
                 </div>
             </div>
@@ -478,26 +473,26 @@
                     <div>
                         <div class="prop">Guest Name:</div>
                         <div id="outGuest" class="val"></div>
-                        <div class="prop" style="margin-top:6px;">Room Type:</div>
+                        <div class="prop" style="margin-top:4px;">Room Type:</div>
                         <div id="outRoom"></div>
                     </div>
                     <div class="right">
                         <div><span class="prop">Invoice Date:</span> <span id="outInvoiceDate"></span></div>
-                        <div><span class="prop">Check-In Date:</span> <span id="outCheckIn"></span></div>
-                        <div><span class="prop">Check-Out Date:</span> <span id="outCheckOut"></span></div>
+                        <div><span class="prop">Check-In:</span> <span id="outCheckIn"></span></div>
+                        <div><span class="prop">Check-Out:</span> <span id="outCheckOut"></span></div>
                         <div><span class="prop">Nights:</span> <span id="outNights"></span></div>
                     </div>
                 </div>
             </div>
 
             <!-- Flat (always nightly lines) -->
-            <div id="flatChargesBlock" style="margin-top:8mm;">
+            <div id="flatChargesBlock">
                 <table class="charges">
                     <thead>
                         <tr>
                             <th>Description:</th>
                             <th>Date:</th>
-                            <th>Cost:</th>
+                            <th class="right">Cost:</th>
                         </tr>
                     </thead>
                     <tbody id="outFlatNightRows"></tbody>
@@ -507,8 +502,8 @@
                             <td class="right amount"><span id="outVAT"></span></td>
                         </tr>
                         <tr>
-                            <td colspan="2" class="right bold">Total Due</td>
-                            <td class="right bold total amount"><span id="outTotal"></span></td>
+                            <td colspan="2" class="right" style="font-weight:700;">Total Due</td>
+                            <td class="right total amount"><span id="outTotal"></span></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -516,35 +511,35 @@
             </div>
 
             <!-- Custom nightly -->
-            <div id="customChargesBlock" style="margin-top:8mm;display:none;">
+            <div id="customChargesBlock" style="display:none;">
                 <table class="charges">
                     <thead>
                         <tr>
                             <th>Description:</th>
                             <th>Date:</th>
-                            <th>Cost:</th>
+                            <th class="right">Cost:</th>
                         </tr>
                     </thead>
                     <tbody id="outNightRows"></tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="2" class="right bold">Subtotal</td>
-                            <td class="right bold amount"><span id="outSubtotalCustom"></span></td>
+                            <td colspan="2" class="right" style="font-weight:700;">Subtotal</td>
+                            <td class="right amount"><span id="outSubtotalCustom"></span></td>
                         </tr>
                         <tr id="vatRowCustom" style="display:none;">
                             <td colspan="2" class="right">VAT (20%)</td>
                             <td class="right amount"><span id="outVATCustom"></span></td>
                         </tr>
                         <tr>
-                            <td colspan="2" class="right bold">Total Due</td>
-                            <td class="right bold total amount"><span id="outTotalCustom"></span></td>
+                            <td colspan="2" class="right" style="font-weight:700;">Total Due</td>
+                            <td class="right total amount"><span id="outTotalCustom"></span></td>
                         </tr>
                     </tfoot>
                 </table>
                 <div id="vatNoteCustom" class="note" style="display:none;">VAT of 20% is included in the rate.</div>
             </div>
 
-            <div style="margin-top:8mm;" class="small">
+            <div style="margin-top:4mm;" class="small">
                 <span class="prop">Payment Method:</span> <span id="outPaymentMethod"></span>
             </div>
             <div style="margin-top:2mm;" class="small" id="outPaymentNotesWrapper" hidden>
@@ -553,18 +548,16 @@
 
             <div class="footer" id="outFooter"></div>
 
-            <div class="small" style="margin-top:8mm; text-align:center; color: #666;">
+            <div class="small" style="margin-top:4mm; text-align:center; color: #666;">
                 We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. 458030991
             </div>
         </div>
     </div>
 
     <script>
-        /* Currency (GBP) */
         const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const fmtGBP = n => gbp.format((+n) || 0);
 
-        /* Date helpers */
         function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return s[(v - 20) % 10] || s[v] || s[0]; }
         function formatDatePretty(iso) {
             if (!iso) return "";
@@ -604,7 +597,6 @@
             return arr.map(c => c / 100);
         }
 
-        /* Wait for images */
         function waitForImages(root, timeoutMs = 3000) {
             const imgs = Array.from((root || document).querySelectorAll('img'));
             if (!imgs.length) return Promise.resolve();
@@ -625,13 +617,10 @@
             });
         }
 
-        /* Controls helpers */
         function addNightRow(date = "", rate = "") {
             const tbody = document.getElementById('nightsTbody');
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td><input type="date" class="night-date" value="${date}"/></td>
-        <td><input type="number" class="night-rate" step="0.01" placeholder="0.00" value="${rate}"/></td>
-        <td class="right"><button type="button" class="btn" onclick="this.closest('tr').remove()">Remove</button></td>`;
+            tr.innerHTML = `<td><input type="date" class="night-date" value="${date}"/></td><td><input type="number" class="night-rate" step="0.01" placeholder="0.00" value="${rate}"/></td><td class="right"><button type="button" class="btn" onclick="this.closest('tr').remove()">Remove</button></td>`;
             tbody.appendChild(tr);
         }
         function clearNights() { document.getElementById('nightsTbody').innerHTML = ""; }
@@ -667,7 +656,6 @@
             document.getElementById('vatOption').value = 'included';
         });
 
-        /* Compute + render */
         function compute() {
             const guest = document.getElementById('guestName').value.trim();
             const checkIn = document.getElementById('checkIn').value;
@@ -686,7 +674,6 @@
             const nightDates = listNights(checkIn, checkOut);
             const n = nightDates.length || (checkIn && checkOut ? 1 : 0);
 
-            // Header (DD/MM/YYYY)
             document.getElementById('outGuest').innerText = guest;
             document.getElementById('outRoom').innerText = roomType;
             document.getElementById('outCheckIn').innerText = formatDateUK(checkIn);
@@ -694,7 +681,6 @@
             document.getElementById('outNights').innerText = nightDates.length || (checkIn && checkOut ? 1 : "");
             document.getElementById('outInvoiceDate').innerText = formatDateUK(invoiceDate);
 
-            // Payment method + notes
             document.getElementById('outPaymentMethod').innerText = paymentMethod;
             const notesWrap = document.getElementById('outPaymentNotesWrapper');
             const notesEl = document.getElementById('outPaymentNotes');
@@ -709,14 +695,14 @@
 
             document.getElementById('outFooter').innerText = footer;
 
-            // Reset VAT UI
             document.getElementById('vatRow').style.display = 'none';
             document.getElementById('vatNote').style.display = 'none';
             document.getElementById('vatRowCustom').style.display = 'none';
             document.getElementById('vatNoteCustom').style.display = 'none';
 
             if (mode === 'flat') {
-                const tbody = document.getElementById('outFlatNightRows'); tbody.innerHTML = "";
+                const tbody = document.getElementById('outFlatNightRows');
+                tbody.innerHTML = "";
                 let amounts = [];
                 if (flatInputMode === 'rate') { amounts = Array(Math.max(1, n)).fill(rateOrTotal); }
                 else { amounts = splitEvenly(rateOrTotal, Math.max(1, n)); }
@@ -726,11 +712,7 @@
                     const amt = amounts[idx] ?? amounts[amounts.length - 1] ?? 0;
                     subtotal += amt;
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `
-            <td>Accommodation</td>
-            <td>${formatDatePretty(iso)}</td>
-            <td class="right amount">${fmtGBP(amt)}</td>
-          `;
+                    tr.innerHTML = `<td>Accommodation</td><td>${formatDatePretty(iso)}</td><td class="right amount">${fmtGBP(amt)}</td>`;
                     tbody.appendChild(tr);
                 });
                 let vat = 0, total = subtotal;
@@ -739,11 +721,11 @@
                 document.getElementById('outVAT').innerText = fmtGBP(vat);
                 document.getElementById('outTotal').innerText = fmtGBP(total);
             } else {
-                // Custom nightly
                 const rows = [...document.querySelectorAll('#nightsTbody tr')];
                 if (rows.length === 0) addNightRow();
                 let subtotal = 0;
-                const outBody = document.getElementById('outNightRows'); outBody.innerHTML = "";
+                const outBody = document.getElementById('outNightRows');
+                outBody.innerHTML = "";
                 rows.forEach(tr => {
                     const d = tr.querySelector('.night-date').value;
                     const r = parseFloat(tr.querySelector('.night-rate').value || "0");
@@ -762,18 +744,18 @@
         }
 
         function previewInvoice() { compute(); document.getElementById('invoice').style.display = 'block'; document.getElementById('invoice').scrollIntoView({ behavior: 'smooth' }); }
-        
+
         async function generateInvoice() {
             compute();
             const el = document.getElementById('invoice');
             el.style.display = 'block';
             await waitForImages(el, 3000);
             const opt = {
-                margin: [8, 8, 8, 8],
+                margin: 0,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['css', 'legacy'] }
+                html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, allowTaint: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+                pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' }
             };
             const filename = 'OnTheWalk-Invoice.pdf';
             try {
@@ -796,17 +778,15 @@
             }
         }
 
-        // Defaults on first load
         (function initDefaults() {
             const t = new Date();
             const yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0');
             const iso = `${yyyy}-${mm}-${dd}`;
-            const inv = document.getElementById('invoiceDate'); if (inv && !inv.value) inv.value = iso;
+            const inv = document.getElementById('invoiceDate');
+            if (inv && !inv.value) inv.value = iso;
             document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
             document.getElementById('vatOption').value = 'included';
-            document.getElementById('notesStyle').value = 'italic';
         })();
     </script>
 </body>
-
 </html>
