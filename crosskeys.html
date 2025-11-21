@@ -444,6 +444,7 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
       </div>
 
       <div class="footer" id="outFooter">
+        <div id="outFooterText"></div>
         <div id="outVATNumber">We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. 458030991</div>
       </div>
     </div>
@@ -470,7 +471,18 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
 
       function compute() {
         const guest = document.getElementById('guestName').value.trim(); const checkIn = document.getElementById('checkIn').value; const checkOut = document.getElementById('checkOut').value; const room = document.getElementById('roomType').value; const vatOption = document.getElementById('vatOption').value; const invoiceDate = document.getElementById('invoiceDate').value; const flatInputMode = document.getElementById('flatInputMode').value; const rateOrTotal = parseFloat(document.getElementById('rateOrTotal').value || '0'); const nights = listNights(checkIn, checkOut); const n = nights.length || ((checkIn && checkOut) ? 1 : 0); const footerText = document.getElementById('footerText').value.trim();
-        document.getElementById('outGuest').innerText = guest; document.getElementById('outRoom').innerText = room; document.getElementById('outCheckIn').innerText = formatDateUK(checkIn); document.getElementById('outCheckOut').innerText = formatDateUK(checkOut); document.getElementById('outNights').innerText = nights.length || ((checkIn && checkOut) ? 1 : ''); document.getElementById('outInvoiceDate').innerText = formatDateUK(invoiceDate); document.getElementById('outFooter').innerText = footerText;
+        document.getElementById('outGuest').innerText = guest; document.getElementById('outRoom').innerText = room; document.getElementById('outCheckIn').innerText = formatDateUK(checkIn); document.getElementById('outCheckOut').innerText = formatDateUK(checkOut); document.getElementById('outNights').innerText = nights.length || ((checkIn && checkOut) ? 1 : ''); document.getElementById('outInvoiceDate').innerText = formatDateUK(invoiceDate); document.getElementById('outFooterText').innerText = footerText;
+
+        try {
+          const vatNumber = (document.getElementById('vatNumber') || {}).value || '';
+          const vatNumberEl = document.getElementById('outVATNumber');
+          if (vatNumberEl) {
+            vatNumberEl.innerHTML = `We Step Limited<br>41 Larnark Road, EH14 1TL<br>VAT No. ${vatNumber || '458030991'}`;
+            vatNumberEl.style.display = 'block';
+          }
+        } catch (e) {
+          console.warn('Failed to set VAT number display', e);
+        }
 
         document.getElementById('vatRow').style.display = 'none'; document.getElementById('vatNote').style.display = 'none';
 
@@ -536,7 +548,17 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
       }
 
       // Defaults on load
-      (function () { const t = new Date(), yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0'); const iso = `${yyyy}-${mm}-${dd}`; const inv = document.getElementById('invoiceDate'); if (inv && !inv.value) inv.value = iso; document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.'; document.getElementById('vatOption').value = 'included'; document.getElementById('flatInputMode').value = 'rate'; })();
+      (function () {
+        const t = new Date(), yyyy = t.getFullYear(), mm = String(t.getMonth() + 1).padStart(2, '0'), dd = String(t.getDate()).padStart(2, '0');
+        const iso = `${yyyy}-${mm}-${dd}`;
+        const inv = document.getElementById('invoiceDate');
+        if (inv && !inv.value) inv.value = iso;
+        document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
+        document.getElementById('vatOption').value = 'included';
+        document.getElementById('flatInputMode').value = 'rate';
+        const _vat = document.getElementById('vatNumber');
+        if (_vat && !_vat.value) _vat.value = '458030991';
+      })();
     </script>
 </body>
 
