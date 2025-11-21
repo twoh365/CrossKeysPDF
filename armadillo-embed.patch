@@ -1,0 +1,31 @@
+--- a/armadillo.html
++++ b/armadillo.html
+@@
+-            document.getElementById('notesStyle').value = 'italic';
+-            document.getElementById('vatNumber').value = '458030991';
++            document.getElementById('notesStyle').value = 'italic';
++            const _vatEl = document.getElementById('vatNumber');
++            if (_vatEl) _vatEl.value = '458030991';
++
++            // Try to fetch the Armadillo logo and embed it as a data URI at runtime
++            (async function embedArmadilloLogo() {
++                try {
++                    const url = 'https://raw.githubusercontent.com/twoh365/CrossKeysPDF/main/images/armadillo-logo.png';
++                    const resp = await fetch(url, { mode: 'cors' });
++                    if (!resp.ok) return;
++                    const blob = await resp.blob();
++                    const data = await new Promise((resolve, reject) => {
++                        const r = new FileReader();
++                        r.onload = () => resolve(r.result);
++                        r.onerror = reject;
++                        r.readAsDataURL(blob);
++                    });
++                    const img = document.getElementById('logoImg');
++                    if (img && data && typeof data === 'string' && data.startsWith('data:')) {
++                        img.src = data;
++                    }
++                } catch (err) {
++                    console.warn('Could not embed Armadillo logo at runtime', err);
++                }
++            })();
++
