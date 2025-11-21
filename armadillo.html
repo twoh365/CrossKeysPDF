@@ -797,42 +797,59 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
         function previewInvoice() { compute(); document.getElementById('invoice').style.display = 'block'; document.getElementById('invoice').scrollIntoView({ behavior: 'smooth' }); }
 
         async function generateInvoice() {
-            compute();
-            const el = document.getElementById('invoice');
-            el.style.display = 'block';
-            await waitForImages(el, 3000);
-
-            // Convert images inside the invoice to embedded data URIs (more reliable for html2canvas)
-            await embedImagesAsDataURIs(el);
-
-            // Allow a short reflow/time for images/backgrounds to settle
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            const opt = {
-                margin: 0,
-                filename: 'ArmadilloGuestHouse-Invoice.pdf',
-                image: { type: 'png', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, allowTaint: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-                pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' }
-            };
             try {
-                await html2pdf().set(opt).from(el).save();
-            } catch (e) {
-                try {
-                    const blob = await html2pdf().set(opt).from(el).outputPdf('blob');
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = opt.filename || 'invoice.pdf';
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    setTimeout(() => URL.revokeObjectURL(url), 500);
-                } catch (err) {
-                    console.error('PDF generation failed', err);
-                    alert('Failed to generate PDF. Try Preview then Download.');
+                console.log('[invoice] generateInvoice start');
+                compute();
+                const el = document.getElementById('invoice');
+                el.style.display = 'block';
+                await waitForImages(el, 3000);
+
+                // Convert images inside the invoice to embedded data URIs (more reliable for html2canvas)
+                await embedImagesAsDataURIs(el);
+
+                // Allow a short reflow/time for images/backgrounds to settle
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                const opt = {
+                    margin: 0,
+                    filename: 'ArmadilloGuestHouse-Invoice.pdf',
+                    image: { type: 'png', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, allowTaint: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+                    pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' }
+                };
+
+                if (typeof html2pdf === 'undefined') {
+                    console.error('[invoice] html2pdf is not loaded');
+                    alert('PDF library not loaded: html2pdf.js');
+                    return;
                 }
+
+                try {
+                    await html2pdf().set(opt).from(el).save();
+                    console.log('[invoice] html2pdf.save completed');
+                } catch (e) {
+                    console.error('[invoice] html2pdf.save failed', e);
+                    // fallback: try to get blob and download
+                    try {
+                        const blob = await html2pdf().set(opt).from(el).outputPdf('blob');
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = opt.filename || 'invoice.pdf';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        setTimeout(() => URL.revokeObjectURL(url), 500);
+                        console.log('[invoice] fallback blob download triggered');
+                    } catch (err) {
+                        console.error('[invoice] PDF generation final failure', err);
+                        alert('Failed to generate PDF. See console for details.');
+                    }
+                }
+            } catch (outerErr) {
+                console.error('[invoice] generateInvoice outer error', outerErr);
+                alert('An unexpected error occurred while generating the PDF. See console for details.');
             }
         }
 
