@@ -752,13 +752,14 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
                 })
                 .then(blob => new Promise(resolve => {
                     const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result || '');
-                    reader.onerror = () => resolve('');
+                    const format = blob.type.includes('jpeg') || blob.type.includes('jpg') ? 'JPEG' : 'PNG';
+                    reader.onload = () => resolve({ dataUrl: reader.result || '', format });
+                    reader.onerror = () => resolve({ dataUrl: '', format });
                     reader.readAsDataURL(blob);
                 }))
                 .catch(err => {
                     console.warn('Could not load logo for PDF', err);
-                    return '';
+                    return { dataUrl: '', format: 'PNG' };
                 });
         }
 
@@ -772,13 +773,13 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
             pdf.text('EDINBURGH', 105, 37, { align: 'center' });
         }
 
-        function addLogoToPdf(pdf, dataUrl) {
-            if (!dataUrl) {
+        function addLogoToPdf(pdf, logo) {
+            if (!logo || !logo.dataUrl) {
                 drawLogoFallback(pdf);
                 return;
             }
             try {
-                pdf.addImage(dataUrl, 'PNG', 75, 10, 60, 47, undefined, 'FAST');
+                pdf.addImage(logo.dataUrl, logo.format, 68, 8, 74, 58, undefined, 'FAST');
             } catch (err) {
                 console.warn('Could not add logo image to PDF', err);
                 drawLogoFallback(pdf);
@@ -787,11 +788,10 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
 
         async function getInvoiceLogoDataUrl() {
             const visibleLogo = document.getElementById('logoImg');
-            if (visibleLogo && visibleLogo.src) {
-                const loaded = await loadImageDataUrl(visibleLogo.getAttribute('src') || visibleLogo.src);
-                if (loaded) return loaded;
-            }
-            return loadImageDataUrl('images/onthewalk-logo.png');
+            const pdfLogo = await loadImageDataUrl('images/onthewalk-logo-pdf.jpg');
+            if (pdfLogo.dataUrl) return pdfLogo;
+            if (!visibleLogo || !visibleLogo.src) return { dataUrl: '', format: 'PNG' };
+            return loadImageDataUrl(visibleLogo.getAttribute('src') || visibleLogo.src);
         }
 
         function moneyToNumber(value) {
@@ -852,38 +852,38 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
                 pdf.setFont('helvetica', 'bold');
                 pdf.setFontSize(8);
                 pdf.setTextColor(68, 68, 68);
-                pdf.text('18 ALBERT PL, EDINBURGH EH7 5HN, SCOTLAND', 105, 62, { align: 'center' });
+                pdf.text('18 ALBERT PL, EDINBURGH EH7 5HN, SCOTLAND', 105, 70, { align: 'center' });
 
                 pdf.setFont('times', 'bold');
                 pdf.setFontSize(18);
                 pdf.setTextColor(34, 34, 34);
-                pdf.text('Invoice for Your Stay at On The Walk', 105, 78, { align: 'center' });
+                pdf.text('Invoice for Your Stay at On The Walk', 105, 86, { align: 'center' });
                 pdf.setDrawColor(200, 195, 187);
                 pdf.setLineWidth(0.5);
-                pdf.line(18, 85, 192, 85);
+                pdf.line(18, 93, 192, 93);
 
                 pdf.setFillColor(255, 253, 250);
-                pdf.roundedRect(18, 93, 174, 28, 2, 2, 'F');
+                pdf.roundedRect(18, 101, 174, 28, 2, 2, 'F');
                 pdf.setDrawColor(200, 195, 187);
-                pdf.roundedRect(18, 93, 174, 28, 2, 2, 'S');
+                pdf.roundedRect(18, 101, 174, 28, 2, 2, 'S');
                 pdf.setFont('helvetica', 'bold');
                 pdf.setFontSize(7);
                 pdf.setTextColor(85, 85, 85);
-                pdf.text('GUEST NAME:', 22, 100);
-                pdf.text('ROOM TYPE:', 22, 111);
-                pdf.text('INVOICE DATE:', 121, 100);
-                pdf.text('CHECK-IN:', 121, 107);
-                pdf.text('CHECK-OUT:', 121, 114);
-                pdf.text('NIGHTS:', 121, 121);
+                pdf.text('GUEST NAME:', 22, 108);
+                pdf.text('ROOM TYPE:', 22, 119);
+                pdf.text('INVOICE DATE:', 121, 108);
+                pdf.text('CHECK-IN:', 121, 115);
+                pdf.text('CHECK-OUT:', 121, 122);
+                pdf.text('NIGHTS:', 121, 129);
                 pdf.setFont('helvetica', 'normal');
                 pdf.setFontSize(10);
                 pdf.setTextColor(34, 34, 34);
-                pdf.text(textOf('outGuest'), 22, 105);
-                pdf.text(textOf('outRoom'), 22, 116);
-                pdf.text(textOf('outInvoiceDate'), 192, 100, { align: 'right' });
-                pdf.text(textOf('outCheckIn'), 192, 107, { align: 'right' });
-                pdf.text(textOf('outCheckOut'), 192, 114, { align: 'right' });
-                pdf.text(textOf('outNights'), 192, 121, { align: 'right' });
+                pdf.text(textOf('outGuest'), 22, 113);
+                pdf.text(textOf('outRoom'), 22, 124);
+                pdf.text(textOf('outInvoiceDate'), 192, 108, { align: 'right' });
+                pdf.text(textOf('outCheckIn'), 192, 115, { align: 'right' });
+                pdf.text(textOf('outCheckOut'), 192, 122, { align: 'right' });
+                pdf.text(textOf('outNights'), 192, 129, { align: 'right' });
 
                 const mode = document.getElementById('rateMode').value;
                 const rows = Array.from(document.querySelectorAll(mode === 'flat' ? '#outFlatNightRows tr' : '#outNightRows tr')).map(row => ({
@@ -897,7 +897,7 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
                 const subtotal = mode === 'custom' ? textOf('outSubtotalCustom') : '';
                 const vatNote = mode === 'flat' ? document.getElementById('vatNote') : document.getElementById('vatNoteCustom');
 
-                let y = drawChargesHeader(pdf, 134);
+                let y = drawChargesHeader(pdf, 142);
                 const bottom = 256;
                 const addPage = () => {
                     pdf.addPage();
