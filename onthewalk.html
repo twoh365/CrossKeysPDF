@@ -739,26 +739,68 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
             return (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
         }
 
-        async function saveWithHtml2Pdf(el) {
-            if (typeof html2pdf === 'undefined') {
-                throw new Error('html2pdf is not loaded');
-            }
-            const opt = {
-                margin: 0,
-                filename: 'OnTheWalk-Invoice.pdf',
-                image: { type: 'png', quality: 1 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    scrollX: 0,
-                    scrollY: 0,
-                    backgroundColor: '#f5f0e9'
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-                pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
-            };
-            await html2pdf().set(opt).from(el).save();
+        function textOf(id) {
+            const el = document.getElementById(id);
+            return el ? el.innerText.trim() : '';
+        }
+
+        function loadImageDataUrl(src) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                        resolve(canvas.toDataURL('image/png'));
+                    } catch (err) {
+                        console.warn('Could not prepare logo for PDF', err);
+                        resolve('');
+                    }
+                };
+                img.onerror = () => resolve('');
+                img.src = src;
+            });
+        }
+
+        function moneyToNumber(value) {
+            return parseFloat(String(value).replace(/[^0-9.-]/g, '')) || 0;
+        }
+
+        function drawPageBase(pdf, pageNo) {
+            pdf.setFillColor(245, 240, 233);
+            pdf.rect(0, 0, 210, 297, 'F');
+            pdf.setTextColor(26, 26, 26);
+            pdf.setFont('times', 'bold');
+            pdf.setFontSize(110);
+            pdf.setTextColor(230, 225, 217);
+            pdf.text('OTW', 105, 168, { align: 'center' });
+            pdf.setTextColor(34, 34, 34);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(8);
+            pdf.text(`Page ${pageNo}`, 196, 287, { align: 'right' });
+        }
+
+        function drawChargesHeader(pdf, y) {
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(8);
+            pdf.setTextColor(85, 85, 85);
+            pdf.text('DESCRIPTION:', 18, y);
+            pdf.text('DATE:', 86, y);
+            pdf.text('COST:', 192, y, { align: 'right' });
+            pdf.setDrawColor(200, 195, 187);
+            pdf.line(18, y + 3, 192, y + 3);
+            return y + 9;
+        }
+
+        function drawWrappedText(pdf, text, x, y, maxWidth, lineHeight) {
+            const lines = pdf.splitTextToSize(text || '', maxWidth);
+            lines.forEach(line => {
+                pdf.text(line, x, y);
+                y += lineHeight;
+            });
+            return y;
         }
 
         async function generateInvoice() {
@@ -767,59 +809,143 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
             el.style.display = 'block';
             await waitForImages(el, 3000);
 
-            // Convert images inside the invoice to embedded data URIs (more reliable for html2canvas)
-            await embedImagesAsDataURIs(el);
-
-            // Small pause to let layout and images settle before rendering.
-            await new Promise(r => setTimeout(r, 300));
-
             try {
                 const jsPDFCtor = getPdfConstructor();
-                if (typeof html2canvas === 'undefined' || !jsPDFCtor) {
-                    throw new Error('PDF libraries are not loaded');
+                if (!jsPDFCtor) throw new Error('jsPDF is not loaded');
+                const pdf = new jsPDFCtor('p', 'mm', 'a4', true);
+                let pageNo = 1;
+                drawPageBase(pdf, pageNo);
+
+                const logoData = await loadImageDataUrl('images/onthewalk-logo.png');
+                if (logoData) {
+                    pdf.addImage(logoData, 'PNG', 82, 13, 46, 36, undefined, 'FAST');
+                } else {
+                    pdf.setFont('times', 'bold');
+                    pdf.setFontSize(20);
+                    pdf.text('ON THE WALK', 105, 28, { align: 'center' });
                 }
-                const canvas = await html2canvas(el, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    scrollX: 0,
-                    scrollY: 0,
-                    backgroundColor: '#f5f0e9'
+
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(8);
+                pdf.setTextColor(68, 68, 68);
+                pdf.text('18 ALBERT PL, EDINBURGH EH7 5HN, SCOTLAND', 105, 55, { align: 'center' });
+
+                pdf.setFont('times', 'bold');
+                pdf.setFontSize(18);
+                pdf.setTextColor(34, 34, 34);
+                pdf.text('Invoice for Your Stay at On The Walk', 105, 72, { align: 'center' });
+                pdf.setDrawColor(200, 195, 187);
+                pdf.setLineWidth(0.5);
+                pdf.line(18, 79, 192, 79);
+
+                pdf.setFillColor(255, 253, 250);
+                pdf.roundedRect(18, 87, 174, 28, 2, 2, 'F');
+                pdf.setDrawColor(200, 195, 187);
+                pdf.roundedRect(18, 87, 174, 28, 2, 2, 'S');
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(7);
+                pdf.setTextColor(85, 85, 85);
+                pdf.text('GUEST NAME:', 22, 94);
+                pdf.text('ROOM TYPE:', 22, 105);
+                pdf.text('INVOICE DATE:', 121, 94);
+                pdf.text('CHECK-IN:', 121, 101);
+                pdf.text('CHECK-OUT:', 121, 108);
+                pdf.text('NIGHTS:', 121, 115);
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(10);
+                pdf.setTextColor(34, 34, 34);
+                pdf.text(textOf('outGuest'), 22, 99);
+                pdf.text(textOf('outRoom'), 22, 110);
+                pdf.text(textOf('outInvoiceDate'), 192, 94, { align: 'right' });
+                pdf.text(textOf('outCheckIn'), 192, 101, { align: 'right' });
+                pdf.text(textOf('outCheckOut'), 192, 108, { align: 'right' });
+                pdf.text(textOf('outNights'), 192, 115, { align: 'right' });
+
+                const mode = document.getElementById('rateMode').value;
+                const rows = Array.from(document.querySelectorAll(mode === 'flat' ? '#outFlatNightRows tr' : '#outNightRows tr')).map(row => ({
+                    description: row.cells[0]?.innerText.trim() || '',
+                    date: row.cells[1]?.innerText.trim() || '',
+                    amount: row.cells[2]?.innerText.trim() || ''
+                }));
+                const total = mode === 'flat' ? textOf('outTotal') : textOf('outTotalCustom');
+                const vatRow = mode === 'flat' ? document.getElementById('vatRow') : document.getElementById('vatRowCustom');
+                const vat = mode === 'flat' ? textOf('outVAT') : textOf('outVATCustom');
+                const subtotal = mode === 'custom' ? textOf('outSubtotalCustom') : '';
+                const vatNote = mode === 'flat' ? document.getElementById('vatNote') : document.getElementById('vatNoteCustom');
+
+                let y = drawChargesHeader(pdf, 128);
+                const bottom = 256;
+                const addPage = () => {
+                    pdf.addPage();
+                    pageNo += 1;
+                    drawPageBase(pdf, pageNo);
+                    y = drawChargesHeader(pdf, 24);
+                };
+
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(10);
+                pdf.setTextColor(34, 34, 34);
+                rows.forEach(row => {
+                    if (y > bottom) addPage();
+                    pdf.text(row.description, 18, y);
+                    pdf.text(row.date, 86, y);
+                    pdf.text(row.amount, 192, y, { align: 'right' });
+                    y += 7;
                 });
 
-                const pdf = new jsPDFCtor('p', 'mm', 'a4', true);
-                const pageWidth = 210;
-                const pageHeight = 297;
-                const pageCanvasHeight = Math.floor(canvas.width * pageHeight / pageWidth);
-                let sourceY = 0;
-                let pageIndex = 0;
-
-                while (sourceY < canvas.height) {
-                    const sliceHeight = Math.min(pageCanvasHeight, canvas.height - sourceY);
-                    const pageCanvas = document.createElement('canvas');
-                    pageCanvas.width = canvas.width;
-                    pageCanvas.height = sliceHeight;
-                    const ctx = pageCanvas.getContext('2d');
-                    ctx.fillStyle = '#f5f0e9';
-                    ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-                    ctx.drawImage(canvas, 0, sourceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
-
-                    if (pageIndex > 0) pdf.addPage();
-                    const imageHeight = sliceHeight * pageWidth / canvas.width;
-                    pdf.addImage(pageCanvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, imageHeight, undefined, 'FAST');
-                    sourceY += sliceHeight;
-                    pageIndex += 1;
+                if (y > bottom - 30) addPage();
+                pdf.setDrawColor(200, 195, 187);
+                pdf.line(18, y, 192, y);
+                y += 7;
+                if (subtotal) {
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text('Subtotal', 150, y, { align: 'right' });
+                    pdf.text(subtotal, 192, y, { align: 'right' });
+                    y += 7;
                 }
+                if (vatRow && vatRow.style.display !== 'none') {
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.text('VAT (20%)', 150, y, { align: 'right' });
+                    pdf.text(vat, 192, y, { align: 'right' });
+                    y += 7;
+                }
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(12);
+                pdf.text('Total Due', 150, y, { align: 'right' });
+                pdf.text(total, 192, y, { align: 'right' });
+                y += 8;
+                if (vatNote && vatNote.style.display !== 'none') {
+                    pdf.setFont('helvetica', 'italic');
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(85, 85, 85);
+                    pdf.text(vatNote.innerText.trim(), 18, y);
+                    y += 8;
+                }
+
+                if (y > bottom - 22) addPage();
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(9);
+                pdf.setTextColor(34, 34, 34);
+                pdf.text(`Payment Method: ${textOf('outPaymentMethod')}`, 18, y);
+                y += 6;
+                const notes = textOf('outPaymentNotes');
+                if (notes) {
+                    y = drawWrappedText(pdf, `Notes: ${notes}`, 18, y, 174, 5);
+                    y += 2;
+                }
+
+                pdf.setDrawColor(200, 195, 187);
+                pdf.line(18, 268, 192, 268);
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(8);
+                pdf.setTextColor(85, 85, 85);
+                drawWrappedText(pdf, textOf('outFooter'), 18, 274, 174, 4);
+                pdf.text('We Step Limited | 41 Larnark Road, EH14 1TL | VAT No. 458030991', 105, 289, { align: 'center' });
 
                 pdf.save('OnTheWalk-Invoice.pdf');
             } catch (err) {
-                console.warn('Canvas PDF generation failed, trying html2pdf fallback', err);
-                try {
-                    await saveWithHtml2Pdf(el);
-                } catch (fallbackErr) {
-                    console.error('PDF generation failed', fallbackErr);
-                    alert('Failed to generate PDF. Please use Preview on Page, then try Download PDF again.');
-                }
+                console.error('PDF generation failed', err);
+                alert('Failed to generate PDF. Please refresh the page and try again.');
             }
         }
 
