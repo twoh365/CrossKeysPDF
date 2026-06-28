@@ -5,6 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>On The Walk -- Invoice Maker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
@@ -737,6 +739,28 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
             return (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
         }
 
+        async function saveWithHtml2Pdf(el) {
+            if (typeof html2pdf === 'undefined') {
+                throw new Error('html2pdf is not loaded');
+            }
+            const opt = {
+                margin: 0,
+                filename: 'OnTheWalk-Invoice.pdf',
+                image: { type: 'png', quality: 1 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0,
+                    backgroundColor: '#f5f0e9'
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+                pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
+            };
+            await html2pdf().set(opt).from(el).save();
+        }
+
         async function generateInvoice() {
             compute();
             const el = document.getElementById('invoice');
@@ -789,8 +813,13 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
 
                 pdf.save('OnTheWalk-Invoice.pdf');
             } catch (err) {
-                console.error('PDF generation failed', err);
-                alert('Failed to generate PDF. Try Preview then Download.');
+                console.warn('Canvas PDF generation failed, trying html2pdf fallback', err);
+                try {
+                    await saveWithHtml2Pdf(el);
+                } catch (fallbackErr) {
+                    console.error('PDF generation failed', fallbackErr);
+                    alert('Failed to generate PDF. Please use Preview on Page, then try Download PDF again.');
+                }
             }
         }
 
@@ -804,7 +833,8 @@ For enquiries, please contact us via your reservation on Booking.com.</textarea>
             document.getElementById('paymentMethod').value = 'Paid by Card Via Booking.com.';
             document.getElementById('vatOption').value = 'included';
             document.getElementById('notesStyle').value = 'italic';
-            document.getElementById('vatNumber').value = '458030991';
+            const vatNumber = document.getElementById('vatNumber');
+            if (vatNumber) vatNumber.value = '458030991';
         })();
     </script>
 </body>
